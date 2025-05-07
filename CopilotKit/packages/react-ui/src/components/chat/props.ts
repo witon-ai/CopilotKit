@@ -1,4 +1,4 @@
-import { Message, TextMessage } from "@copilotkit/runtime-client-gql";
+import { AIMessage, Message, UserMessage } from "@copilotkit/shared";
 import { CopilotChatSuggestion } from "../../types/suggestions";
 import { ReactNode } from "react";
 
@@ -32,8 +32,6 @@ export interface MessagesProps {
   AssistantMessage: React.ComponentType<AssistantMessageProps>;
   UserMessage: React.ComponentType<UserMessageProps>;
   RenderTextMessage: React.ComponentType<RenderMessageProps>;
-  RenderActionExecutionMessage: React.ComponentType<RenderMessageProps>;
-  RenderAgentStateMessage: React.ComponentType<RenderMessageProps>;
   RenderResultMessage: React.ComponentType<RenderMessageProps>;
   RenderImageMessage: React.ComponentType<RenderMessageProps>;
 
@@ -50,12 +48,12 @@ export interface MessagesProps {
   /**
    * Callback function for thumbs up feedback
    */
-  onThumbsUp?: (message: TextMessage) => void;
+  onThumbsUp?: (message: Message) => void;
 
   /**
    * Callback function for thumbs down feedback
    */
-  onThumbsDown?: (message: TextMessage) => void;
+  onThumbsDown?: (message: Message) => void;
 
   /**
    * A list of markdown components to render in assistant message.
@@ -69,9 +67,7 @@ export interface Renderer {
 }
 
 export interface UserMessageProps {
-  message?: string;
-  rawData: any;
-  subComponent?: React.JSX.Element;
+  message?: UserMessage;
 }
 
 export interface AssistantMessageProps {
@@ -79,24 +75,12 @@ export interface AssistantMessageProps {
    * The message content from the assistant
    */
 
-  message?: string;
+  message?: AIMessage;
 
   /**
    * Indicates if this is the last message
    */
   isCurrentMessage?: boolean;
-
-  /**
-   * The raw data from the assistant's response
-   */
-  rawData: any;
-
-  /**
-   * A component that was decided to render by the LLM.
-   * When working with useCopilotActions and useCoAgentStateRender, this will be
-   * the render component that was specified.
-   */
-  subComponent?: React.JSX.Element;
 
   /**
    * Whether a response is loading, this is when the LLM is thinking of a response but hasn't finished yet.
@@ -121,12 +105,12 @@ export interface AssistantMessageProps {
   /**
    * Callback function for thumbs up feedback
    */
-  onThumbsUp?: (message: TextMessage) => void;
+  onThumbsUp?: (message: Message) => void;
 
   /**
    * Callback function for thumbs down feedback
    */
-  onThumbsDown?: (message: TextMessage) => void;
+  onThumbsDown?: (message: Message) => void;
 
   /**
    * A list of markdown components to render in assistant message.
@@ -157,12 +141,12 @@ export interface RenderMessageProps {
   /**
    * Callback function for thumbs up feedback
    */
-  onThumbsUp?: (message: TextMessage) => void;
+  onThumbsUp?: (message: Message) => void;
 
   /**
    * Callback function for thumbs down feedback
    */
-  onThumbsDown?: (message: TextMessage) => void;
+  onThumbsDown?: (message: Message) => void;
 
   /**
    * A list of markdown components to render in assistant message.

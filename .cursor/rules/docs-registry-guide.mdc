@@ -1,0 +1,561 @@
+---
+description: When editing or working with the docs in CopilotKit
+globs: 
+alwaysApply: false
+---
+# Documentation and Registry Guide
+
+## Overview
+
+The documentation site and registry are essential components of the CopilotKit ecosystem, providing comprehensive guides, API references, and component showcases for developers.
+
+## Documentation Site (`docs/`)
+
+The documentation site is built with Next.js and Fumadocs, providing a modern, searchable documentation experience.
+
+### Technology Stack
+
+```json
+{
+  "framework": "Next.js 14",
+  "documentation": "Fumadocs",
+  "styling": "Tailwind CSS",
+  "components": "Radix UI",
+  "analytics": "PostHog",
+  "authentication": "Clerk",
+  "search": "Built-in Fumadocs search"
+}
+```
+
+### Project Structure
+
+```
+docs/
+├── app/                    # Next.js app directory
+│   ├── layout.tsx         # Root layout with providers
+│   ├── page.tsx           # Homepage
+│   └── docs/              # Documentation pages
+├── content/               # Documentation content
+│   └── docs/              # MDX documentation files
+│       ├── (root)/        # Getting started guides
+│       ├── reference/     # API reference
+│       ├── coagents/      # Agent framework docs
+│       ├── crewai-crews/  # CrewAI integration
+│       ├── crewai-flows/  # CrewAI flows
+│       ├── agno/          # Agno framework
+│       ├── ag2/           # Ag2 framework
+│       └── mastra/        # Mastra framework
+├── components/            # Custom documentation components
+├── lib/                   # Utility functions
+├── public/                # Static assets
+└── snippets/              # Code snippets for examples
+```
+
+### Content Organization
+
+#### Getting Started (`(root)/`)
+- **Quickstart**: Basic setup and first application
+- **Installation**: Package installation and configuration
+- **Core Concepts**: Fundamental CopilotKit concepts
+- **Examples**: Basic usage examples
+
+#### API Reference (`reference/`)
+- **Hooks**: All React hooks documentation
+- **Components**: UI component documentation
+- **Types**: TypeScript type definitions
+- **Configuration**: Configuration options
+
+#### Agent Framework (`coagents/`)
+- **Overview**: Multi-agent system introduction
+- **Tutorials**: Step-by-step agent tutorials
+- **Shared State**: State management between agents
+- **Advanced Patterns**: Complex agent workflows
+
+#### Framework Integrations
+- **CrewAI**: CrewAI agent integration
+- **Agno**: Agno framework integration
+- **Ag2**: Ag2 framework integration
+- **Mastra**: Mastra framework integration
+
+### MDX Content Structure
+
+```mdx
+---
+title: "useCopilotAction"
+description: "The useCopilotAction hook allows your copilot to take action in the app."
+---
+
+# useCopilotAction
+
+The `useCopilotAction` hook allows your copilot to execute actions in your application.
+
+## Usage
+
+```tsx
+useCopilotAction({
+  name: "myAction",
+  description: "Action description",
+  parameters: [
+    { name: "param", type: "string", required: true }
+  ],
+  handler: async ({ param }) => {
+    // Action implementation
+  }
+});
+```
+
+## Parameters
+
+<PropertyReference name="name" type="string" required={true}>
+  The unique name of the action.
+</PropertyReference>
+
+<PropertyReference name="description" type="string">
+  A description of what the action does.
+</PropertyReference>
+```
+
+### Custom Components
+
+#### PropertyReference
+```tsx
+interface PropertyReferenceProps {
+  name: string;
+  type: string;
+  required?: boolean;
+  children: React.ReactNode;
+}
+
+export function PropertyReference({ name, type, required, children }: PropertyReferenceProps) {
+  return (
+    <div className="property-reference">
+      <div className="property-header">
+        <span className="property-name">{name}</span>
+        <span className="property-type">{type}</span>
+        {required && <span className="required-badge">Required</span>}
+      </div>
+      <div className="property-description">{children}</div>
+    </div>
+  );
+}
+```
+
+#### CodeBlock
+```tsx
+interface CodeBlockProps {
+  children: string;
+  language?: string;
+  filename?: string;
+  highlight?: string;
+}
+
+export function CodeBlock({ children, language, filename, highlight }: CodeBlockProps) {
+  return (
+    <div className="code-block">
+      {filename && <div className="filename">{filename}</div>}
+      <SyntaxHighlighter
+        language={language}
+        style={theme}
+        highlightLines={highlight ? highlight.split(',').map(Number) : undefined}
+      >
+        {children}
+      </SyntaxHighlighter>
+    </div>
+  );
+}
+```
+
+### Configuration Files
+
+#### Fumadocs Configuration (`source.config.ts`)
+```typescript
+import { defineConfig } from "fumadocs-core/source";
+
+export default defineConfig({
+  name: "CopilotKit",
+  baseUrl: "https://docs.copilotkit.ai",
+  theme: {
+    colors: {
+      primary: "hsl(var(--primary))",
+    },
+  },
+  defaultLocale: "en",
+  locales: ["en"],
+  pages: [
+    {
+      title: "Documentation",
+      pages: [
+        {
+          title: "Getting Started",
+          pages: [
+            { title: "Quickstart", url: "/quickstart" },
+            { title: "Installation", url: "/installation" },
+          ],
+        },
+        {
+          title: "Reference",
+          pages: [
+            { title: "Hooks", url: "/reference/hooks" },
+            { title: "Components", url: "/reference/components" },
+          ],
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### Next.js Configuration (`next.config.mjs`)
+```javascript
+import { withFumadocs } from "fumadocs/next-plugin";
+
+const nextConfig = {
+  // Next.js configuration
+  experimental: {
+    mdxRs: true,
+  },
+  images: {
+    domains: ["github.com", "user-attachments.githubusercontent.com"],
+  },
+};
+
+export default withFumadocs(nextConfig);
+```
+
+### Development Workflow
+
+#### Adding New Documentation
+1. **Create MDX file** in appropriate directory under `content/docs/`
+2. **Add frontmatter** with title, description, and metadata
+3. **Update navigation** in `source.config.ts`
+4. **Add to search index** (automatic with Fumadocs)
+5. **Test locally** with `npm run dev`
+
+#### Code Examples
+```tsx
+// snippets/basic-setup.tsx
+export const BasicSetup = () => {
+  return (
+    <div>
+      <h1>Basic Setup</h1>
+      <p>This is a basic CopilotKit setup example.</p>
+    </div>
+  );
+};
+
+// In MDX file
+import { BasicSetup } from "../../snippets/basic-setup";
+
+<BasicSetup />
+```
+
+#### API Documentation
+```tsx
+// components/api-docs.tsx
+export function APIDocs({ component }: { component: string }) {
+  return (
+    <div className="api-docs">
+      <h2>API Reference</h2>
+      <ComponentDocs component={component} />
+    </div>
+  );
+}
+```
+
+## Registry (`registry/`)
+
+The registry is a component showcase and documentation site for CopilotKit components, built with Next.js and shadcn/ui.
+
+### Technology Stack
+
+```json
+{
+  "framework": "Next.js 15",
+  "ui": "shadcn/ui",
+  "styling": "Tailwind CSS",
+  "components": "Radix UI",
+  "package": "shadcn",
+  "query": "TanStack Query"
+}
+```
+
+### Project Structure
+
+```
+registry/
+├── app/                   # Next.js app directory
+│   ├── layout.tsx        # Root layout
+│   ├── page.tsx          # Homepage
+│   └── components/       # Component pages
+├── components/           # UI components
+│   ├── ui/              # shadcn/ui components
+│   └── showcase/        # Component showcases
+├── lib/                  # Utility functions
+├── hooks/                # Custom hooks
+├── public/               # Static assets
+└── registry.json         # Component registry data
+```
+
+### Registry Configuration
+
+#### Component Registry (`registry.json`)
+```json
+{
+  "components": [
+    {
+      "name": "CopilotChat",
+      "description": "A complete chat interface component",
+      "category": "Chat",
+      "package": "@copilotkit/react-ui",
+      "files": [
+        {
+          "name": "CopilotChat.tsx",
+          "description": "Main chat component",
+          "dependencies": ["@copilotkit/react-core"]
+        }
+      ],
+      "examples": [
+        {
+          "name": "Basic Chat",
+          "description": "Simple chat implementation",
+          "code": "basic-chat-example"
+        },
+        {
+          "name": "Custom Styling",
+          "description": "Chat with custom styling",
+          "code": "custom-styling-example"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Chat",
+      "description": "Chat interface components"
+    },
+    {
+      "name": "Input",
+      "description": "Input and form components"
+    },
+    {
+      "name": "UI",
+      "description": "General UI components"
+    }
+  ]
+}
+```
+
+### Component Showcase
+
+#### Component Page Structure
+```tsx
+// app/components/[component]/page.tsx
+export default function ComponentPage({ params }: { params: { component: string } }) {
+  const component = getComponent(params.component);
+  
+  return (
+    <div className="component-page">
+      <ComponentHeader component={component} />
+      <ComponentDescription component={component} />
+      <ComponentExamples component={component} />
+      <ComponentAPI component={component} />
+      <ComponentCode component={component} />
+    </div>
+  );
+}
+```
+
+#### Example Showcase
+```tsx
+// components/showcase/example-showcase.tsx
+interface ExampleShowcaseProps {
+  examples: Example[];
+  componentName: string;
+}
+
+export function ExampleShowcase({ examples, componentName }: ExampleShowcaseProps) {
+  return (
+    <div className="example-showcase">
+      <h3>Examples</h3>
+      <div className="examples-grid">
+        {examples.map((example) => (
+          <ExampleCard
+            key={example.name}
+            example={example}
+            componentName={componentName}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### Development Workflow
+
+#### Adding New Components
+1. **Update registry.json** with component metadata
+2. **Create component page** in `app/components/[component]/`
+3. **Add examples** to showcase
+4. **Update navigation** and search
+5. **Test locally** with `npm run dev`
+
+#### Component Documentation
+```tsx
+// components/showcase/component-docs.tsx
+export function ComponentDocs({ component }: { component: Component }) {
+  return (
+    <div className="component-docs">
+      <div className="docs-header">
+        <h1>{component.name}</h1>
+        <p>{component.description}</p>
+      </div>
+      
+      <div className="docs-content">
+        <Tabs defaultValue="examples">
+          <TabsList>
+            <TabsTrigger value="examples">Examples</TabsTrigger>
+            <TabsTrigger value="api">API</TabsTrigger>
+            <TabsTrigger value="code">Code</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="examples">
+            <ExampleShowcase examples={component.examples} />
+          </TabsContent>
+          
+          <TabsContent value="api">
+            <APIReference component={component} />
+          </TabsContent>
+          
+          <TabsContent value="code">
+            <CodeViewer component={component} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+```
+
+### Search and Navigation
+
+#### Search Implementation
+```tsx
+// components/search.tsx
+export function Search() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  
+  const searchComponents = useCallback(async (searchQuery: string) => {
+    if (searchQuery.length < 2) return;
+    
+    const results = await searchRegistry(searchQuery);
+    setResults(results);
+  }, []);
+  
+  return (
+    <div className="search">
+      <Input
+        placeholder="Search components..."
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          searchComponents(e.target.value);
+        }}
+      />
+      {results.length > 0 && (
+        <div className="search-results">
+          {results.map((result) => (
+            <SearchResult key={result.id} result={result} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Analytics and Monitoring
+
+#### PostHog Integration
+```tsx
+// lib/analytics.ts
+import posthog from "posthog-js";
+
+export function initAnalytics() {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  });
+}
+
+export function trackEvent(event: string, properties?: Record<string, any>) {
+  posthog.capture(event, properties);
+}
+
+// Track component usage
+export function trackComponentView(componentName: string) {
+  trackEvent("component_viewed", { component: componentName });
+}
+```
+
+### Deployment
+
+#### Vercel Configuration
+```json
+// vercel.json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_POSTHOG_KEY": "@posthog-key",
+    "NEXT_PUBLIC_POSTHOG_HOST": "@posthog-host"
+  }
+}
+```
+
+#### Environment Variables
+```env
+# Analytics
+NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+
+# Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_key
+CLERK_SECRET_KEY=your_clerk_secret
+
+# Registry
+REGISTRY_URL=https://registry.copilotkit.ai
+```
+
+## Best Practices
+
+### Documentation
+1. **Clear Structure**: Organize content logically with clear navigation
+2. **Code Examples**: Provide working, copyable code examples
+3. **API Reference**: Complete and accurate API documentation
+4. **Search**: Implement effective search functionality
+5. **Responsive**: Ensure documentation works on all devices
+6. **Performance**: Optimize for fast loading times
+7. **Accessibility**: Follow accessibility guidelines
+8. **SEO**: Implement proper SEO meta tags
+
+### Registry
+1. **Component Showcase**: Clear, interactive examples
+2. **Code Viewing**: Easy-to-copy code snippets
+3. **API Documentation**: Complete prop documentation
+4. **Search**: Fast, accurate component search
+5. **Categories**: Logical component organization
+6. **Examples**: Multiple usage examples per component
+7. **Responsive**: Mobile-friendly component displays
+8. **Performance**: Fast component loading
+
+### Development
+1. **Version Control**: Proper Git workflow for documentation
+2. **Review Process**: Code review for documentation changes
+3. **Testing**: Test all code examples
+4. **Automation**: Automated deployment and testing
+5. **Monitoring**: Track documentation usage and performance
+6. **Feedback**: Collect and act on user feedback
+7. **Updates**: Keep documentation current with code changes
+8. **Localization**: Consider internationalization needs

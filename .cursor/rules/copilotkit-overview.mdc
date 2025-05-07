@@ -1,0 +1,198 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# CopilotKit Overview
+
+## What is CopilotKit?
+
+CopilotKit is a comprehensive framework for building deeply-integrated AI assistants and agents that work alongside users inside applications. It provides both React/JavaScript and Python SDKs for creating conversational AI experiences with full context awareness and action capabilities.
+
+## Core Architecture
+
+### Frontend (React/JavaScript)
+- **React Core Package**: `@copilotkit/react-core` - Main React hooks and context providers
+- **React UI Package**: `@copilotkit/react-ui` - Pre-built UI components
+- **React Textarea Package**: `@copilotkit/react-textarea` - Enhanced textarea with AI assistance
+- **Runtime Client**: `@copilotkit/runtime-client-gql` - GraphQL client for runtime communication
+
+### Backend (Python)
+- **Python SDK**: `copilotkit` - LangGraph/LangChain integration with FastAPI support
+- **Runtime Server**: Handles AI model interactions and state management
+
+## Key Components
+
+### 1. CopilotKit Provider
+The main context provider that wraps your application:
+```tsx
+<CopilotKit runtimeUrl="<your-runtime-url>">
+  {children}
+</CopilotKit>
+```
+
+### 2. Core Hooks
+
+#### useCopilotChat
+Headless chat hook for custom UI implementation:
+```tsx
+const { visibleMessages, appendMessage, setMessages, isLoading } = useCopilotChat();
+```
+
+#### useCopilotAction
+Defines actions the AI can execute:
+```tsx
+useCopilotAction({
+  name: "myAction",
+  description: "Action description",
+  parameters: [{ name: "param", type: "string" }],
+  handler: async ({ param }) => { /* action logic */ },
+  render: ({ args }) => <CustomUI {...args} />
+});
+```
+
+#### useCopilotReadable
+Provides context to the AI:
+```tsx
+useCopilotReadable({
+  description: "Context description",
+  value: yourData
+});
+```
+
+### 3. Agent Framework (CoAgents)
+Multi-agent system with shared state and collaborative workflows:
+```tsx
+const { agentState } = useCoAgent({ 
+  name: "agent_name", 
+  initialState: { data: "initial" } 
+});
+```
+
+## Technical Stack
+
+### Frontend
+- **React 18+** with TypeScript
+- **Next.js** for full-stack applications
+- **Turbo** for monorepo build system
+- **GraphQL** for runtime communication
+- **Tailwind CSS** for styling
+
+### Backend
+- **Python 3.8+**
+- **LangGraph/LangChain** for agent orchestration
+- **FastAPI** for API endpoints
+- **CrewAI** integration (optional)
+- **GraphQL** schema generation
+
+### Development Tools
+- **pnpm** for package management
+- **ESLint/Prettier** for code formatting
+- **Jest** for testing
+- **TypeDoc** for documentation generation
+
+## Repository Structure
+
+```
+CopilotKit/
+├── packages/                    # Core packages
+│   ├── react-core/             # Main React hooks and context
+│   ├── react-ui/               # Pre-built UI components
+│   ├── react-textarea/         # Enhanced textarea
+│   ├── runtime/                # Backend runtime
+│   ├── runtime-client-gql/     # GraphQL client
+│   ├── sdk-js/                 # JavaScript SDK utilities
+│   └── shared/                 # Shared types and utilities
+├── examples/                   # Example applications
+│   ├── copilot-form-filling/   # Form assistant demo
+│   ├── copilot-state-machine/  # State machine demo
+│   ├── coagents-travel/        # Multi-agent travel planner
+│   └── ...                     # Many more examples
+├── docs/                       # Documentation site
+├── sdk-python/                 # Python SDK
+└── registry/                   # Package registry
+```
+
+## Common Usage Patterns
+
+### 1. Basic Chat Integration
+```tsx
+import { CopilotKit, useCopilotChat } from "@copilotkit/react-core";
+
+function App() {
+  return (
+    <CopilotKit publicApiKey={process.env.NEXT_PUBLIC_COPILOT_PUBLIC_API_KEY}>
+      <ChatComponent />
+    </CopilotKit>
+  );
+}
+```
+
+### 2. Context-Aware Actions
+```tsx
+useCopilotReadable({
+  description: "Current user data",
+  value: userData
+});
+
+useCopilotAction({
+  name: "updateUser",
+  parameters: [{ name: "field", type: "string" }, { name: "value", type: "string" }],
+  handler: async ({ field, value }) => {
+    // Update user data
+  }
+});
+```
+
+### 3. Generative UI
+```tsx
+useCopilotAction({
+  name: "generateChart",
+  parameters: [{ name: "data", type: "object" }],
+  render: ({ args }) => <ChartComponent data={args.data} />
+});
+```
+
+### 4. Multi-Agent Workflows
+```tsx
+useCoAgentStateRender({
+  name: "research_agent",
+  render: ({ state }) => <ResearchResults {...state} />
+});
+```
+
+## Key Features
+
+- **Context Awareness**: AI understands application state and user data
+- **Action Execution**: AI can trigger functions and update application state
+- **Generative UI**: Dynamic UI generation based on AI responses
+- **Multi-Agent Support**: Collaborative agent workflows
+- **State Management**: Persistent conversation and agent state
+- **Authentication**: Built-in auth support for cloud deployments
+- **Streaming**: Real-time response streaming
+- **Type Safety**: Full TypeScript support with automatic type inference
+
+## Development Workflow
+
+1. **Setup**: Install packages and configure CopilotKit provider
+2. **Context**: Use `useCopilotReadable` to provide application context
+3. **Actions**: Define actions with `useCopilotAction` for AI interaction
+4. **UI**: Implement chat interface or use pre-built components
+5. **Deploy**: Use CopilotKit Cloud or self-host with runtime server
+
+## Integration Points
+
+- **AI Models**: OpenAI, Anthropic, local models via runtime
+- **Vector Databases**: Pinecone, Weaviate, etc.
+- **Knowledge Bases**: Document ingestion and retrieval
+- **External APIs**: REST/GraphQL API integration
+- **Authentication**: OAuth, API keys, custom auth flows
+
+## Best Practices
+
+1. **Context Management**: Provide relevant, structured context to AI
+2. **Action Design**: Create focused, well-described actions
+3. **Error Handling**: Implement proper error boundaries and fallbacks
+4. **Performance**: Use streaming and optimize context updates
+5. **Security**: Validate AI inputs and implement proper auth
+6. **Testing**: Test AI interactions and edge cases thoroughly 

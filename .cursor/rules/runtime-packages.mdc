@@ -1,0 +1,694 @@
+---
+description: When editing or working with the runtime package
+globs: 
+alwaysApply: false
+---
+# Runtime Packages Guide
+
+## Overview
+
+The runtime packages provide the backend infrastructure for CopilotKit applications. They handle AI model interactions, state management, and provide a GraphQL API for frontend communication.
+
+## @copilotkit/runtime
+
+The backend runtime package that provides the server-side infrastructure for CopilotKit applications.
+
+### Core Features
+
+- **GraphQL API**: Type-safe GraphQL schema for frontend communication
+- **AI Model Integration**: Support for OpenAI, Anthropic, and other providers
+- **Agent Framework**: LangGraph and LangChain integration
+- **State Management**: Persistent conversation and agent state
+- **Streaming**: Real-time response streaming
+- **Authentication**: Built-in auth support
+- **Observability**: Logging and telemetry
+
+### Installation and Setup
+
+```bash
+npm install @copilotkit/runtime
+```
+
+### Basic Server Setup
+
+```typescript
+import { createCopilotRuntime } from "@copilotkit/runtime";
+import express from "express";
+
+const app = express();
+
+const runtime = createCopilotRuntime({
+  // AI model configuration
+  models: {
+    openai: {
+      apiKey: process.env.OPENAI_API_KEY,
+      model: "gpt-4"
+    },
+    anthropic: {
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-sonnet"
+    }
+  },
+  
+  // Agent configuration
+  agents: {
+    default: {
+      type: "langchain",
+      config: {
+        // LangChain configuration
+      }
+    }
+  },
+  
+  // Authentication
+  auth: {
+    enabled: true,
+    providers: ["openai", "anthropic"]
+  },
+  
+  // Logging
+  logging: {
+    level: "info",
+    format: "json"
+  }
+});
+
+// Mount GraphQL endpoint
+app.use("/api/copilot", runtime.graphqlHandler);
+
+// Start server
+app.listen(3001, () => {
+  console.log("CopilotKit runtime running on port 3001");
+});
+```
+
+### GraphQL Schema
+
+The runtime automatically generates a GraphQL schema with the following operations:
+
+```graphql
+type Query {
+  # Health check
+  health: HealthStatus
+  
+  # Agent information
+  agents: [Agent!]!
+  agent(name: String!): Agent
+}
+
+type Mutation {
+  # Chat completion
+  generateCopilotResponse(input: CopilotRequestInput!): CopilotResponse!
+  
+  # Agent management
+  createAgent(input: CreateAgentInput!): Agent!
+  updateAgent(input: UpdateAgentInput!): Agent!
+  deleteAgent(name: String!): Boolean!
+}
+
+type Subscription {
+  # Real-time updates
+  copilotResponse(threadId: String!): CopilotResponse!
+  agentState(agentName: String!): AgentState!
+}
+
+type CopilotRequestInput {
+  messages: [MessageInput!]!
+  actions: [ActionInput!]
+  context: String
+  threadId: String
+  runId: String
+  agentSession: AgentSessionInput
+  agentStates: [AgentStateInput!]
+  extensions: ExtensionsInput
+  metadata: MetadataInput
+}
+
+type CopilotResponse {
+  messages: [Message!]!
+  agentStates: [AgentState!]
+  threadId: String
+  runId: String
+  metadata: Metadata
+}
+```
+
+### AI Model Configuration
+
+```typescript
+const runtime = createCopilotRuntime({
+  models: {
+    // OpenAI configuration
+    openai: {
+      apiKey: process.env.OPENAI_API_KEY,
+      model: "gpt-4",
+      temperature: 0.7,
+      maxTokens: 1000,
+      organization: process.env.OPENAI_ORG_ID
+    },
+    
+    // Anthropic configuration
+    anthropic: {
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-sonnet",
+      temperature: 0.7,
+      maxTokens: 1000
+    },
+    
+    // Groq configuration
+    groq: {
+      apiKey: process.env.GROQ_API_KEY,
+      model: "llama3-8b-8192",
+      temperature: 0.7
+    },
+    
+    // Local model configuration
+    local: {
+      endpoint: "http://localhost:11434",
+      model: "llama2",
+      temperature: 0.7
+    }
+  }
+});
+```
+
+### Agent Configuration
+
+```typescript
+const runtime = createCopilotRuntime({
+  agents: {
+    // LangChain agent
+    langchain: {
+      type: "langchain",
+      config: {
+        model: "openai",
+        tools: [
+          // Custom tools
+          {
+            name: "search",
+            description: "Search the web",
+            schema: {
+              type: "object",
+              properties: {
+                query: { type: "string" }
+              }
+            },
+            handler: async ({ query }) => {
+              // Tool implementation
+              return await searchWeb(query);
+            }
+          }
+        ],
+        memory: {
+          type: "conversation",
+          maxTokens: 2000
+        }
+      }
+    },
+    
+    // LangGraph agent
+    langgraph: {
+      type: "langgraph",
+      config: {
+        model: "anthropic",
+        graph: {
+          nodes: [
+            {
+              name: "start",
+              type: "start"
+            },
+            {
+              name: "process",
+              type: "tool",
+              tool: "process_input"
+            },
+            {
+              name: "end",
+              type: "end"
+            }
+          ],
+          edges: [
+            { from: "start", to: "process" },
+            { from: "process", to: "end" }
+          ]
+        }
+      }
+    },
+    
+    // CrewAI agent
+    crewai: {
+      type: "crewai",
+      config: {
+        agents: [
+          {
+            name: "researcher",
+            role: "Research specialist",
+            goal: "Find relevant information",
+            tools: ["search", "read"]
+          },
+          {
+            name: "writer",
+            role: "Content writer",
+            goal: "Create compelling content",
+            tools: ["write", "edit"]
+          }
+        ],
+        tasks: [
+          {
+            description: "Research the topic",
+            agent: "researcher"
+          },
+          {
+            description: "Write the content",
+            agent: "writer"
+          }
+        ]
+      }
+    }
+  }
+});
+```
+
+### Custom Tools and Actions
+
+```typescript
+// Define custom tools
+const customTools = [
+  {
+    name: "database_query",
+    description: "Query the database",
+    schema: {
+      type: "object",
+      properties: {
+        query: { type: "string" },
+        table: { type: "string" }
+      },
+      required: ["query", "table"]
+    },
+    handler: async ({ query, table }) => {
+      const result = await db.query(query, { table });
+      return { success: true, data: result };
+    }
+  },
+  
+  {
+    name: "file_operation",
+    description: "Perform file operations",
+    schema: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["read", "write", "delete"] },
+        path: { type: "string" },
+        content: { type: "string" }
+      },
+      required: ["operation", "path"]
+    },
+    handler: async ({ operation, path, content }) => {
+      switch (operation) {
+        case "read":
+          return await fs.readFile(path, "utf8");
+        case "write":
+          await fs.writeFile(path, content);
+          return { success: true };
+        case "delete":
+          await fs.unlink(path);
+          return { success: true };
+      }
+    }
+  }
+];
+
+const runtime = createCopilotRuntime({
+  agents: {
+    default: {
+      type: "langchain",
+      config: {
+        model: "openai",
+        tools: customTools
+      }
+    }
+  }
+});
+```
+
+### Authentication and Security
+
+```typescript
+const runtime = createCopilotRuntime({
+  auth: {
+    enabled: true,
+    providers: ["openai", "anthropic"],
+    
+    // Custom authentication
+    customAuth: {
+      validate: async (req) => {
+        const token = req.headers.authorization;
+        if (!token) return false;
+        
+        // Validate token
+        const user = await validateToken(token);
+        return user ? { userId: user.id, permissions: user.permissions } : false;
+      }
+    },
+    
+    // Rate limiting
+    rateLimit: {
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100 // limit each IP to 100 requests per windowMs
+    }
+  }
+});
+```
+
+### Streaming Configuration
+
+```typescript
+const runtime = createCopilotRuntime({
+  streaming: {
+    enabled: true,
+    format: "server-sent-events", // or "websocket"
+    chunkSize: 100,
+    flushInterval: 1000
+  }
+});
+```
+
+## @copilotkit/runtime-client-gql
+
+The GraphQL client package for communicating with the CopilotKit runtime.
+
+### Installation
+
+```bash
+npm install @copilotkit/runtime-client-gql
+```
+
+### Basic Usage
+
+```typescript
+import { CopilotRuntimeClient } from "@copilotkit/runtime-client-gql";
+
+const client = new CopilotRuntimeClient({
+  url: "http://localhost:3001/api/copilot",
+  headers: {
+    "Authorization": `Bearer ${apiKey}`
+  }
+});
+
+// Generate response
+const response = await client.generateCopilotResponse({
+  messages: [
+    {
+      role: "user",
+      content: "Hello, how can you help me?"
+    }
+  ],
+  actions: [
+    {
+      name: "search",
+      description: "Search for information",
+      parameters: [
+        {
+          name: "query",
+          type: "string",
+          description: "Search query"
+        }
+      ]
+    }
+  ],
+  context: "User is asking for help with a project",
+  threadId: "thread-123",
+  metadata: {
+    requestType: "chat"
+  }
+});
+
+console.log(response.messages);
+```
+
+### Streaming Responses
+
+```typescript
+// Streaming response
+const stream = client.asStream(
+  client.generateCopilotResponse({
+    messages: [{ role: "user", content: "Tell me a story" }]
+  })
+);
+
+for await (const chunk of stream) {
+  if (chunk.data?.generateCopilotResponse) {
+    const response = chunk.data.generateCopilotResponse;
+    console.log("Received chunk:", response);
+  }
+}
+```
+
+### Message Types
+
+```typescript
+import { 
+  TextMessage, 
+  ImageMessage, 
+  ActionExecutionMessage,
+  ResultMessage,
+  AgentStateMessage,
+  Role 
+} from "@copilotkit/runtime-client-gql";
+
+// Create different message types
+const textMessage = new TextMessage({
+  content: "Hello, world!",
+  role: Role.User
+});
+
+const imageMessage = new ImageMessage({
+  content: "data:image/jpeg;base64,...",
+  role: Role.User
+});
+
+const actionMessage = new ActionExecutionMessage({
+  name: "search",
+  arguments: { query: "AI trends" },
+  status: { code: "executing" }
+});
+
+const resultMessage = new ResultMessage({
+  actionName: "search",
+  result: "Search results...",
+  status: { code: "completed" }
+});
+
+const agentStateMessage = new AgentStateMessage({
+  agentName: "researcher",
+  state: { currentTask: "searching", progress: 0.5 }
+});
+```
+
+### Agent Management
+
+```typescript
+// Get available agents
+const agents = await client.query({
+  agents: {
+    name: true,
+    type: true,
+    config: true
+  }
+});
+
+// Create new agent
+const newAgent = await client.mutate({
+  createAgent: {
+    input: {
+      name: "custom_agent",
+      type: "langchain",
+      config: {
+        model: "openai",
+        tools: ["search", "write"]
+      }
+    }
+  }
+});
+
+// Update agent
+const updatedAgent = await client.mutate({
+  updateAgent: {
+    input: {
+      name: "custom_agent",
+      config: {
+        model: "anthropic",
+        temperature: 0.8
+      }
+    }
+  }
+});
+```
+
+### Subscriptions
+
+```typescript
+// Subscribe to real-time updates
+const subscription = client.subscribe({
+  copilotResponse: {
+    args: { threadId: "thread-123" },
+    messages: {
+      id: true,
+      content: true,
+      role: true
+    },
+    agentStates: {
+      agentName: true,
+      state: true
+    }
+  }
+});
+
+subscription.subscribe({
+  next: (result) => {
+    console.log("Real-time update:", result.data?.copilotResponse);
+  },
+  error: (error) => {
+    console.error("Subscription error:", error);
+  }
+});
+```
+
+### Error Handling
+
+```typescript
+try {
+  const response = await client.generateCopilotResponse({
+    messages: [{ role: "user", content: "Hello" }]
+  });
+} catch (error) {
+  if (error.graphQLErrors) {
+    error.graphQLErrors.forEach(err => {
+      console.error("GraphQL Error:", err.message);
+    });
+  }
+  
+  if (error.networkError) {
+    console.error("Network Error:", error.networkError);
+  }
+}
+```
+
+### Type Safety
+
+```typescript
+import { 
+  CopilotRequestInput,
+  CopilotResponse,
+  Message,
+  Action
+} from "@copilotkit/runtime-client-gql";
+
+// Type-safe request
+const request: CopilotRequestInput = {
+  messages: [
+    {
+      role: "user",
+      content: "Hello"
+    }
+  ],
+  actions: [
+    {
+      name: "search",
+      description: "Search for information",
+      parameters: [
+        {
+          name: "query",
+          type: "string",
+          description: "Search query"
+        }
+      ]
+    }
+  ],
+  threadId: "thread-123"
+};
+
+// Type-safe response
+const response: CopilotResponse = await client.generateCopilotResponse(request);
+```
+
+### Integration with React
+
+```typescript
+import { useCopilotRuntimeClient } from "@copilotkit/react-core";
+
+function MyComponent() {
+  const client = useCopilotRuntimeClient({
+    url: "http://localhost:3001/api/copilot",
+    publicApiKey: process.env.NEXT_PUBLIC_COPILOT_PUBLIC_API_KEY
+  });
+
+  const handleSubmit = async (message: string) => {
+    const response = await client.generateCopilotResponse({
+      messages: [{ role: "user", content: message }]
+    });
+    
+    console.log(response.messages);
+  };
+
+  return (
+    <div>
+      {/* Your component */}
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+1. **Environment Variables**: Use environment variables for API keys and configuration
+2. **Error Handling**: Implement proper error handling for all API calls
+3. **Rate Limiting**: Configure appropriate rate limits for production
+4. **Logging**: Enable logging for debugging and monitoring
+5. **Security**: Implement proper authentication and authorization
+6. **Performance**: Use streaming for long responses
+7. **Type Safety**: Leverage TypeScript for type-safe API calls
+8. **Testing**: Write tests for custom tools and agents
+
+## Deployment
+
+### Docker Deployment
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3001
+
+CMD ["npm", "start"]
+```
+
+### Environment Configuration
+
+```env
+# AI Model Keys
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
+GROQ_API_KEY=your_groq_key
+
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/copilotkit
+
+# Authentication
+JWT_SECRET=your_jwt_secret
+
+# Logging
+LOG_LEVEL=info
+LOG_FORMAT=json
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+```

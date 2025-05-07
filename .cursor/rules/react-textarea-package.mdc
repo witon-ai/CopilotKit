@@ -1,0 +1,503 @@
+---
+description: When editing or working with the react-textarea package
+globs: 
+alwaysApply: false
+---
+# @copilotkit/react-textarea Package Guide
+
+## Overview
+
+The `@copilotkit/react-textarea` package provides an AI-powered textarea component that offers intelligent autosuggestions, text editing, and content generation capabilities. It integrates seamlessly with CopilotKit's context system and provides a rich editing experience.
+
+## Core Components
+
+### CopilotTextarea
+The main AI-enhanced textarea component with autosuggestions and editing capabilities.
+
+```tsx
+import { CopilotTextarea } from "@copilotkit/react-textarea";
+import "@copilotkit/react-textarea/styles.css";
+
+<CopilotTextarea
+  value={text}
+  onValueChange={setText}
+  placeholder="Start typing..."
+  autosuggestionsConfig={{
+    textareaPurpose: "The body of an email message",
+    contextCategories: ["email", "user"],
+    chatApiConfigs: {
+      suggestionsApiConfig: {
+        maxTokens: 20,
+        stop: [".", "?", "!"],
+        temperature: 0.7
+      },
+      insertionApiConfig: {
+        maxTokens: 100,
+        temperature: 0.8
+      },
+      editingApiConfig: {
+        maxTokens: 200,
+        temperature: 0.6
+      }
+    },
+    disabled: false,
+    disableBranding: false,
+    placeholderStyle: { color: "#666" },
+    suggestionsStyle: { backgroundColor: "#f5f5f5" },
+    hoverMenuClassname: "custom-hover-menu",
+    shortcut: "Cmd-k" // or "Ctrl-k" for Windows
+  }}
+  className="custom-textarea"
+  rows={5}
+  cols={50}
+/>
+```
+
+**Key Features:**
+- **Intelligent Autosuggestions**: AI-powered text completion
+- **Context Awareness**: Integrates with `useCopilotReadable` for relevant suggestions
+- **Text Editing**: AI-assisted text modification and improvement
+- **Hover Editor**: Floating editor window for advanced editing
+- **Keyboard Shortcuts**: Customizable shortcuts for editor access
+- **Customizable Styling**: Full control over appearance
+- **Category Filtering**: Context-aware suggestions based on categories
+
+## Configuration Options
+
+### AutosuggestionsConfig
+```tsx
+interface AutosuggestionsConfig {
+  textareaPurpose: string;           // Purpose description for AI
+  contextCategories?: string[];      // Context categories to include
+  chatApiConfigs: {
+    suggestionsApiConfig?: SuggestionsApiConfig;
+    insertionApiConfig?: InsertionApiConfig;
+    editingApiConfig?: EditingApiConfig;
+  };
+  disabled?: boolean;                // Disable autosuggestions
+  disableBranding?: boolean;         // Hide CopilotKit branding
+  placeholderStyle?: React.CSSProperties;
+  suggestionsStyle?: React.CSSProperties;
+  hoverMenuClassname?: string;
+  shortcut?: string;                 // Keyboard shortcut
+}
+```
+
+### API Configurations
+
+#### SuggestionsApiConfig
+```tsx
+interface SuggestionsApiConfig {
+  maxTokens?: number;        // Maximum tokens for suggestions
+  stop?: string[];          // Stop sequences
+  temperature?: number;      // Creativity level (0-1)
+  topP?: number;            // Nucleus sampling
+  frequencyPenalty?: number; // Frequency penalty
+  presencePenalty?: number;  // Presence penalty
+}
+```
+
+#### InsertionApiConfig
+```tsx
+interface InsertionApiConfig {
+  maxTokens?: number;        // Maximum tokens for insertions
+  temperature?: number;      // Creativity level
+  topP?: number;            // Nucleus sampling
+  frequencyPenalty?: number; // Frequency penalty
+  presencePenalty?: number;  // Presence penalty
+}
+```
+
+#### EditingApiConfig
+```tsx
+interface EditingApiConfig {
+  maxTokens?: number;        // Maximum tokens for edits
+  temperature?: number;      // Creativity level
+  topP?: number;            // Nucleus sampling
+  frequencyPenalty?: number; // Frequency penalty
+  presencePenalty?: number;  // Presence penalty
+}
+```
+
+## Advanced Usage Patterns
+
+### Email Composition
+```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+function EmailComposer() {
+  const [emailBody, setEmailBody] = useState("");
+  
+  // Provide context about the recipient
+  useCopilotReadable({
+    description: "Email recipient information",
+    value: {
+      name: "John Doe",
+      role: "Project Manager",
+      company: "Tech Corp"
+    },
+    categories: ["email", "recipient"]
+  });
+
+  return (
+    <CopilotTextarea
+      value={emailBody}
+      onValueChange={setEmailBody}
+      placeholder="Write your email..."
+      autosuggestionsConfig={{
+        textareaPurpose: "Professional email body for a project manager",
+        contextCategories: ["email", "recipient"],
+        chatApiConfigs: {
+          suggestionsApiConfig: {
+            maxTokens: 15,
+            temperature: 0.3
+          },
+          insertionApiConfig: {
+            maxTokens: 50,
+            temperature: 0.4
+          }
+        }
+      }}
+    />
+  );
+}
+```
+
+### Content Writing
+```tsx
+function BlogPostEditor() {
+  const [content, setContent] = useState("");
+  
+  // Provide writing context
+  useCopilotReadable({
+    description: "Blog post topic and audience",
+    value: {
+      topic: "AI in Healthcare",
+      audience: "Healthcare professionals",
+      tone: "Informative and professional"
+    },
+    categories: ["blog", "writing"]
+  });
+
+  return (
+    <CopilotTextarea
+      value={content}
+      onValueChange={setContent}
+      placeholder="Start writing your blog post..."
+      autosuggestionsConfig={{
+        textareaPurpose: "Informative blog post about AI in healthcare for healthcare professionals",
+        contextCategories: ["blog", "writing"],
+        chatApiConfigs: {
+          suggestionsApiConfig: {
+            maxTokens: 25,
+            temperature: 0.5
+          },
+          editingApiConfig: {
+            maxTokens: 100,
+            temperature: 0.4
+          }
+        }
+      }}
+    />
+  );
+}
+```
+
+### Code Documentation
+```tsx
+function CodeCommenter() {
+  const [comment, setComment] = useState("");
+  
+  // Provide code context
+  useCopilotReadable({
+    description: "Function to document",
+    value: {
+      functionName: "calculateTotal",
+      parameters: ["items", "taxRate"],
+      returnType: "number",
+      purpose: "Calculate total with tax"
+    },
+    categories: ["code", "documentation"]
+  });
+
+  return (
+    <CopilotTextarea
+      value={comment}
+      onValueChange={setComment}
+      placeholder="Write function documentation..."
+      autosuggestionsConfig={{
+        textareaPurpose: "JSDoc comment for a JavaScript function",
+        contextCategories: ["code", "documentation"],
+        chatApiConfigs: {
+          suggestionsApiConfig: {
+            maxTokens: 20,
+            temperature: 0.2
+          },
+          insertionApiConfig: {
+            maxTokens: 80,
+            temperature: 0.3
+          }
+        }
+      }}
+    />
+  );
+}
+```
+
+## Custom Hooks
+
+### useMakeStandardAutosuggestionFunction
+Creates a standard autosuggestion function for the textarea.
+
+```tsx
+import { useMakeStandardAutosuggestionFunction } from "@copilotkit/react-textarea";
+
+function CustomTextarea() {
+  const autosuggestionsFunction = useMakeStandardAutosuggestionFunction(
+    "Purpose of the textarea",
+    ["category1", "category2"],
+    {
+      maxTokens: 20,
+      temperature: 0.7
+    }
+  );
+
+  return (
+    <BaseCopilotTextarea
+      baseAutosuggestionsConfig={{
+        autosuggestionsFunction,
+        // ... other config
+      }}
+    />
+  );
+}
+```
+
+### useMakeStandardInsertionOrEditingFunction
+Creates functions for text insertion and editing.
+
+```tsx
+import { useMakeStandardInsertionOrEditingFunction } from "@copilotkit/react-textarea";
+
+function CustomTextarea() {
+  const insertionOrEditingFunction = useMakeStandardInsertionOrEditingFunction(
+    "Purpose of the textarea",
+    ["category1", "category2"],
+    {
+      maxTokens: 100,
+      temperature: 0.8
+    },
+    {
+      maxTokens: 200,
+      temperature: 0.6
+    }
+  );
+
+  return (
+    <BaseCopilotTextarea
+      baseAutosuggestionsConfig={{
+        insertionOrEditingFunction,
+        // ... other config
+      }}
+    />
+  );
+}
+```
+
+## Styling and Customization
+
+### CSS Custom Properties
+```css
+:root {
+  --copilotkit-textarea-bg: #ffffff;
+  --copilotkit-textarea-border: #d1d5db;
+  --copilotkit-textarea-focus-border: #3b82f6;
+  --copilotkit-suggestions-bg: #f9fafb;
+  --copilotkit-suggestions-border: #e5e7eb;
+  --copilotkit-suggestion-hover-bg: #f3f4f6;
+  --copilotkit-hover-menu-bg: #ffffff;
+  --copilotkit-hover-menu-border: #d1d5db;
+  --copilotkit-hover-menu-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Custom Styling
+```tsx
+<CopilotTextarea
+  className="
+    border-2 border-gray-300 rounded-lg p-4
+    focus:border-blue-500 focus:ring-2 focus:ring-blue-200
+    [&_.copilotkit-suggestions]:bg-gray-50
+    [&_.copilotkit-suggestion]:hover:bg-blue-50
+    [&_.copilotkit-hover-menu]:shadow-xl
+  "
+  autosuggestionsConfig={{
+    placeholderStyle: { 
+      color: "#6b7280",
+      fontStyle: "italic" 
+    },
+    suggestionsStyle: { 
+      backgroundColor: "#f8fafc",
+      border: "1px solid #e2e8f0"
+    },
+    hoverMenuClassname: "custom-hover-menu"
+  }}
+/>
+```
+
+## Event Handling
+
+### Value Change Events
+```tsx
+<CopilotTextarea
+  value={text}
+  onValueChange={(newValue) => {
+    setText(newValue);
+    // Track changes for analytics
+    analytics.track('textarea_change', { 
+      length: newValue.length,
+      purpose: 'email_composition'
+    });
+  }}
+  onChange={(event) => {
+    // Handle native textarea change events
+    console.log('Native change event:', event);
+  }}
+/>
+```
+
+### Keyboard Shortcuts
+```tsx
+<CopilotTextarea
+  autosuggestionsConfig={{
+    shortcut: "Cmd-k", // Custom shortcut
+    // ... other config
+  }}
+  onKeyDown={(event) => {
+    // Handle custom keyboard shortcuts
+    if (event.key === 'Escape') {
+      // Close suggestions
+    }
+  }}
+/>
+```
+
+## Integration with Context
+
+### Dynamic Context Updates
+```tsx
+function DynamicTextarea() {
+  const [context, setContext] = useState({});
+  const [text, setText] = useState("");
+
+  // Update context based on textarea content
+  useEffect(() => {
+    const newContext = analyzeText(text);
+    setContext(newContext);
+  }, [text]);
+
+  // Provide dynamic context
+  useCopilotReadable({
+    description: "Current writing context",
+    value: context,
+    categories: ["dynamic", "writing"]
+  });
+
+  return (
+    <CopilotTextarea
+      value={text}
+      onValueChange={setText}
+      autosuggestionsConfig={{
+        textareaPurpose: "Dynamic content writing",
+        contextCategories: ["dynamic", "writing"]
+      }}
+    />
+  );
+}
+```
+
+### Multi-Category Context
+```tsx
+function MultiContextTextarea() {
+  // User context
+  useCopilotReadable({
+    description: "User profile",
+    value: userProfile,
+    categories: ["user", "profile"]
+  });
+
+  // Document context
+  useCopilotReadable({
+    description: "Document structure",
+    value: documentStructure,
+    categories: ["document", "structure"]
+  });
+
+  // Style context
+  useCopilotReadable({
+    description: "Writing style guide",
+    value: styleGuide,
+    categories: ["style", "guide"]
+  });
+
+  return (
+    <CopilotTextarea
+      autosuggestionsConfig={{
+        textareaPurpose: "Professional document writing",
+        contextCategories: ["user", "document", "style"]
+      }}
+    />
+  );
+}
+```
+
+## Best Practices
+
+1. **Purpose Clarity**: Provide clear, specific textarea purposes for better AI suggestions
+2. **Context Categories**: Use meaningful categories to organize context
+3. **Temperature Tuning**: Adjust temperature based on creativity needs
+4. **Token Limits**: Set appropriate maxTokens to control suggestion length
+5. **Performance**: Use context categories to limit irrelevant suggestions
+6. **User Experience**: Provide clear visual feedback for AI interactions
+7. **Accessibility**: Ensure keyboard navigation works properly
+8. **Error Handling**: Handle API failures gracefully
+
+## Common Use Cases
+
+### Form Filling
+```tsx
+<CopilotTextarea
+  autosuggestionsConfig={{
+    textareaPurpose: "Professional bio for LinkedIn profile",
+    contextCategories: ["profile", "professional"]
+  }}
+/>
+```
+
+### Creative Writing
+```tsx
+<CopilotTextarea
+  autosuggestionsConfig={{
+    textareaPurpose: "Creative story writing with vivid descriptions",
+    contextCategories: ["creative", "story"],
+    chatApiConfigs: {
+      suggestionsApiConfig: { temperature: 0.8 },
+      insertionApiConfig: { temperature: 0.9 }
+    }
+  }}
+/>
+```
+
+### Technical Documentation
+```tsx
+<CopilotTextarea
+  autosuggestionsConfig={{
+    textareaPurpose: "Technical API documentation with code examples",
+    contextCategories: ["technical", "documentation"],
+    chatApiConfigs: {
+      suggestionsApiConfig: { temperature: 0.2 },
+      editingApiConfig: { temperature: 0.3 }
+    }
+  }}
+/>
+```

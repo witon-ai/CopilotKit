@@ -7,15 +7,16 @@ export function RenderResultMessage({
 }: RenderMessageProps) {
   const { message, inProgress, index, isCurrentMessage } = props;
 
-  if (message.isResultMessage() && inProgress && isCurrentMessage) {
+  if (message.role === "tool" && inProgress && isCurrentMessage) {
     return (
-      <AssistantMessage
-        key={index}
-        data-message-role="assistant"
-        rawData={message}
-        isLoading={true}
-        isGenerating={true}
-      />
+      <></>
+      // <AssistantMessage
+      //   key={index}
+      //   data-message-role="assistant"
+      //   message={message}
+      //   isLoading={true}
+      //   isGenerating={true}
+      // />
     );
   }
 

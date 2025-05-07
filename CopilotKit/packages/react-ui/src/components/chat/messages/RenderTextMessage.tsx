@@ -19,23 +19,15 @@ export function RenderTextMessage({
     markdownTagRenderers,
   } = props;
 
-  if (message.isTextMessage()) {
-    if (message.role === "user") {
-      return (
-        <UserMessage
-          key={index}
-          data-message-role="user"
-          message={message.content}
-          rawData={message}
-        />
-      );
-    } else if (message.role == "assistant") {
+  switch (message.role) {
+    case "user":
+      return <UserMessage key={index} data-message-role="user" message={message} />;
+    case "assistant":
       return (
         <AssistantMessage
           key={index}
           data-message-role="assistant"
-          message={message.content}
-          rawData={message}
+          message={message}
           isLoading={inProgress && isCurrentMessage && !message.content}
           isGenerating={inProgress && isCurrentMessage && !!message.content}
           isCurrentMessage={isCurrentMessage}
@@ -46,6 +38,5 @@ export function RenderTextMessage({
           markdownTagRenderers={markdownTagRenderers}
         />
       );
-    }
   }
 }
