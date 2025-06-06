@@ -22,68 +22,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             <SubdocsMenu
               options={[
                 {
-                  title: "Standard",
-                  description: "Documentation for building Copilots",
-                  url: "/",
-                  icon: <RocketIcon className="w-4 h-4" />,
-                  bgGradient:
-                    "bg-gradient-to-b from-indigo-700 to-indigo-400 text-indigo-100",
-                  selectedStyle: "ring-indigo-500/70 ring-2 rounded-sm",
-                },
-
-                {
-                  title: "CoAgents",
-                  options: [
-                    {
-                      title: "CoAgents (LangGraph)",
-                      description: "Documentation for CoAgents with LangGraph",
-                      url: "/coagents",
-                      icon: <SiLangchain className="w-4 h-4 text-bold" />,
-                      bgGradient:
-                        "bg-gradient-to-b from-purple-700 to-purple-400 text-purple-100",
-                      selectedStyle: "ring-purple-500/70 ring-2 rounded-sm",
-                    },
-                    {
-                      title: "CoAgents (CrewAI Flows)",
-                      description:
-                        "Documentation for CoAgents with CrewAI Flows",
-                      url: "/crewai-flows",
-                      icon: <SiCrewai className="w-4 h-4 text-bold" />,
-                      bgGradient:
-                        "bg-gradient-to-b from-[#FA694C] to-[#FE8A71] text-white",
-                      selectedStyle: "ring-[#FA694C]/70 ring-2 rounded-sm",
-                    },
-                    {
-                      title: "CoAgents (CrewAI Crews)",
-                      description:
-                        "Documentation for CoAgents with CrewAI Crews",
-                      url: "/crewai-crews",
-                      icon: <SiCrewai className="w-4 h-4 text-bold" />,
-                      bgGradient:
-                        "bg-gradient-to-b from-[#FA694C] to-[#FE8A71] text-white",
-                      selectedStyle: "ring-[#FA694C]/70 ring-2 rounded-sm",
-                    },
-                    {
-                      title: "CoAgents (Mastra)",
-                      description: "Documentation for CoAgents with Mastra",
-                      url: "/mastra",
-                      icon: <MastraIcon className="w-4 h-4 text-bold" />,
-                      bgGradient:
-                        "bg-gradient-to-b from-black to-zinc-800 text-white",
-                      selectedStyle: "ring-zinc-800 dark:ring-white ring-2 rounded-sm",
-                    },
-                    {
-                      title: "CoAgents (AG2)",
-                      description: "Documentation for CoAgents with AG2",
-                      url: "/ag2",
-                      icon: <AG2Icon className="w-4 h-4 text-bold" />,
-                      bgGradient:
-                        "bg-gradient-to-b from-indigo-700 to-indigo-400 text-indigo-100",
-                      selectedStyle: "ring-indigo-500/70 ring-2 rounded-sm",
-                    },
-                  ],
-                },
-                {
                   title: "API Reference",
                   description: "API Reference",
                   url: "/reference",
