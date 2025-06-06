@@ -2,9 +2,6 @@
   "title": "copilotkit",
   "root": true,
   "pages": [
-    "index",
-    "runtime-loops",
-    "quickstart",
     "...guides",
     "---Tutorials---",
     "...tutorials",
