@@ -14,6 +14,7 @@ import {
   // ...
 } from "@shikijs/transformers";
 import { remarkMermaid } from '@theguild/remark-mermaid'
+import remarkBreaks from 'remark-breaks'
 
 export const { docs, meta } = defineDocs();
 
@@ -32,6 +33,7 @@ export default defineConfig({
       ],
     ],
     remarkPlugins: [
+      remarkBreaks,
       remarkMermaid,
       [remarkInstall, { persist: { id: "package-manager" } }],
       [remarkDocGen, { generators: [typescriptGenerator(), fileGenerator()] }],
