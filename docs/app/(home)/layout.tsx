@@ -49,6 +49,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   selectedStyle: "ring-teal-500/70 ring-2 rounded-sm",
                 },
                 { type: 'separator' },
+                /*
                 {
                   title: "Standard Runloop",
                   description: "Documentation for building Copilots",
@@ -105,6 +106,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     "bg-gradient-to-b from-indigo-700 to-indigo-400 text-indigo-100",
                   selectedStyle: "ring-indigo-500/70 ring-2 rounded-sm",
                 },
+                */
                 // {
                 //   title: "Chat with our docs",
                 //   description: "Chat with our docs",
