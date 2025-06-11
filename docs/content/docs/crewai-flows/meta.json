@@ -1,6 +1,5 @@
 {
   "title": "CrewAI Flows",
-  "root": true,
   "pages": [
     "index",
     "quickstart",

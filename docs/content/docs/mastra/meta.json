@@ -1,6 +1,5 @@
 {
   "title": "Mastra",
-  "root": true,
   "pages": [
     "index",
     "quickstart",
