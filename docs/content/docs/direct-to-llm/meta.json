@@ -1,0 +1,16 @@
+{
+  "title": "Direct to LLM",
+  "pages": [
+    "...guides",
+    "---Tutorials---",
+    "...tutorials",
+    "---Cookbook---",
+    "...cookbook",
+    "---Troubleshooting---",
+    "...troubleshooting",
+    "---Other---",
+    "(other)/contributing",
+    "(other)/telemetry",
+    "(other)/observability"
+  ]
+} 

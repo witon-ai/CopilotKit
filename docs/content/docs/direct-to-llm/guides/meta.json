@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "---Core Features---",
+    "frontend-actions",
+    "backend-actions",
+    "frontend-backend-action-pairing",
+    "generative-ui",
+    "copilot-textarea",
+    "copilot-suggestions",
+    "---Security & Infrastructure---",
+    "authenticated-actions",
+    "guardrails",
+    "self-hosting",
+    "messages-localstorage",
+    "---Data & Context---",
+    "connect-your-data",
+    "model-context-protocol"
+  ]
+}
