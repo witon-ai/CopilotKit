@@ -48,6 +48,68 @@ export default function Layout({ children }: { children: ReactNode }) {
                     "bg-gradient-to-b from-teal-700 to-teal-400 text-teal-100",
                   selectedStyle: "ring-teal-500/70 ring-2 rounded-sm",
                 },
+                {
+                  type: 'separator', // Add this line for a separator
+                },
+                {
+                  title: "Connect to an LLM",
+                  description: "Connect directly to an LLM",
+                  url: "/direct-to-llm",
+                  icon: <TerminalIcon className="w-4 h-4" />,
+                  bgGradient:
+                    "bg-gradient-to-b from-blue-700 to-blue-400 text-blue-100",
+                  selectedStyle: "ring-blue-500/70 ring-2 rounded-sm",
+                },
+                {
+                  title: "Use an Agent Framework",
+                  options: [
+                    {
+                      title: "AutoGen2",
+                      description: "Build with AG2 Agents",
+                      url: "/ag2",
+                      icon: <AG2Icon className="w-4 h-4" />,
+                      bgGradient:
+                        "bg-gradient-to-b from-indigo-700 to-indigo-400 text-indigo-100",
+                      selectedStyle: "ring-indigo-500/70 ring-2 rounded-sm",
+                    },
+                    {
+                      title: "LangGraph",
+                      description: "Build with LangGraph",
+                      url: "/coagents",
+                      icon: <SiLangchain className="w-4 h-4" />,
+                      bgGradient:
+                        "bg-gradient-to-b from-purple-700 to-purple-400 text-purple-100",
+                      selectedStyle: "ring-purple-500/70 ring-2 rounded-sm",
+                    },
+                    {
+                      title: "CrewAI Crews",
+                      description: "Build with CrewAI Crews",
+                      url: "/crewai-crews",
+                      icon: <SiCrewai className="w-4 h-4" />,
+                      bgGradient:
+                        "bg-gradient-to-b from-orange-700 to-orange-400 text-orange-100",
+                      selectedStyle: "ring-orange-500/70 ring-2 rounded-sm",
+                    },
+                    {
+                      title: "CrewAI Flows",
+                      description: "Build with CrewAI Flows",
+                      url: "/crewai-flows",
+                      icon: <SiCrewai className="w-4 h-4" />,
+                      bgGradient:
+                        "bg-gradient-to-b from-yellow-700 to-yellow-400 text-yellow-100",
+                      selectedStyle: "ring-yellow-500/70 ring-2 rounded-sm",
+                    },
+                    {
+                      title: "Mastra",
+                      description: "Build with Mastra Agents",
+                      url: "/mastra",
+                      icon: <MastraIcon className="w-4 h-4" />,
+                      bgGradient:
+                        "bg-gradient-to-b from-gray-700 to-gray-400 text-gray-100",
+                      selectedStyle: "ring-gray-500/70 ring-2 rounded-sm",
+                    },
+                  ],
+                },
                 // {
                 //   title: "Chat with our docs",
                 //   description: "Chat with our docs",

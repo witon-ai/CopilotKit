@@ -1,5 +1,6 @@
 {
   "title": "AutoGen2",
+  "root": true,
   "pages": [
     "index",
     "quickstart",

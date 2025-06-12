@@ -1,5 +1,6 @@
 {
   "title": "Direct to LLM",
+  "root": true,
   "pages": [
     "...guides",
     "---Tutorials---",

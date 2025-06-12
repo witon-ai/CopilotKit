@@ -1,5 +1,6 @@
 {
   "title": "LangGraph",
+  "root": true,
   "pages": [
     "index",
     "quickstart",
