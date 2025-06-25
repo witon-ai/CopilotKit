@@ -2,6 +2,29 @@
   "title": "Overview",
   "root": true,
   "pages": [
-    "index"
+    "index",
+    "---Getting Started---",
+    "[lucide/Play][Quickstart with LLM](../direct-to-llm/guides/quickstart)",
+    "[lucide/Play][Quickstart with Coagent](../coagents/quickstart)",
+    "...shared-guides",
+    "---CoAgent Features---",
+    "../coagents/agentic-chat-ui",
+    "../coagents/generative-ui",
+    "../coagents/human-in-the-loop",
+    "../coagents/shared-state",
+    "../coagents/frontend-actions",
+    "../coagents/multi-agent-flows",
+    "../coagents/persistence",
+    "../coagents/advanced",
+    "---Tutorials & Videos---",
+    "...../coagents/tutorials",
+    "...../coagents/videos",
+    "---Learn about CoAgents---",
+    "../coagents/concepts",
+    "---Troubleshooting---",
+    "troubleshooting",
+    "../coagents/coagent-troubleshooting",
+    "---Other---",
+    "...(other)"
   ]
 }
