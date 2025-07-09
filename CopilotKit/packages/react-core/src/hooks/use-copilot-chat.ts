@@ -50,7 +50,7 @@ import { useChat, AppendMessageOptions } from "./use-chat";
 import { defaultCopilotContextCategories } from "../components";
 import { CoAgentStateRenderHandlerArguments } from "@copilotkit/shared";
 import { useAsyncCallback } from "../components/error-boundary/error-utils";
-import { reloadSuggestions } from "../utils";
+import { reloadSuggestions as generateSuggestions } from "../utils";
 import type { SuggestionItem } from "../utils";
 
 import { Message } from "@copilotkit/shared";
@@ -104,11 +104,10 @@ export interface UseCopilotChatReturn {
   setMcpServers: (mcpServers: MCPServerConfig[]) => void;
   suggestions: SuggestionItem[];
   setSuggestions: (suggestions: SuggestionItem[]) => void;
-  reloadSuggestions: () => Promise<void>;
+  generateSuggestions: () => Promise<void>;
+  isLoadingSuggestions: boolean;
   interrupt: string | React.ReactElement | null;
 }
-
-const SUGGESTIONS_DEBOUNCE_TIMEOUT = 1000;
 
 export function useCopilotChat({
   makeSystemMessage,
@@ -149,11 +148,10 @@ export function useCopilotChat({
 
   // Add suggestion state - same as useCopilotChatLogic
   const suggestionsAbortControllerRef = useRef<AbortController | null>(null);
-  const debounceTimerRef = useRef<any>();
   const isLoadingSuggestionsRef = useRef<boolean>(false);
 
   const abortSuggestions = () => {
-    suggestionsAbortControllerRef.current?.abort();
+    suggestionsAbortControllerRef.current?.abort("suggestioned aborted by user");
     suggestionsAbortControllerRef.current = null;
   };
 
@@ -189,7 +187,7 @@ export function useCopilotChat({
       return;
     }
 
-    reloadSuggestionsFunc();
+    generateSuggestionsFunc();
   }, [
     isLoading,
     context.chatSuggestionConfiguration,
@@ -198,21 +196,20 @@ export function useCopilotChat({
     messages,
   ]);
 
-  // Use the shared reloadSuggestions function
-  const reloadSuggestionsFunc = useAsyncCallback(async () => {
-    abortSuggestions();
-
+  // Use the shared generateSuggestions function
+  const generateSuggestionsFunc = useAsyncCallback(async () => {
     try {
+      abortSuggestions();
       isLoadingSuggestionsRef.current = true;
       suggestionsAbortControllerRef.current = new AbortController();
-      await reloadSuggestions(
+      await generateSuggestions(
         context as CopilotContextParams & CopilotMessagesContextParams,
         chatSuggestionConfiguration,
         setSuggestions,
         suggestionsAbortControllerRef,
       );
     } catch (error) {
-      console.error("Error in reloadSuggestions:", error);
+      console.error("Error in generateSuggestions:", error);
       // Don't rethrow to prevent infinite retries
     } finally {
       isLoadingSuggestionsRef.current = false;
@@ -393,8 +390,9 @@ export function useCopilotChat({
     setMcpServers,
     suggestions,
     setSuggestions,
-    reloadSuggestions: reloadSuggestionsFunc,
+    generateSuggestions: generateSuggestionsFunc,
     interrupt,
+    isLoadingSuggestions: isLoadingSuggestionsRef.current,
   };
 }
 

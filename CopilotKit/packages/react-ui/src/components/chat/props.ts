@@ -1,6 +1,7 @@
 import { AIMessage, Message, UserMessage } from "@copilotkit/shared";
 import { CopilotChatSuggestion } from "../../types/suggestions";
 import { ReactNode } from "react";
+import { ImageData } from "@copilotkit/shared"; 
 
 export interface ButtonProps {}
 
@@ -32,8 +33,7 @@ export interface MessagesProps {
   AssistantMessage: React.ComponentType<AssistantMessageProps>;
   UserMessage: React.ComponentType<UserMessageProps>;
   RenderTextMessage: React.ComponentType<RenderMessageProps>;
-  RenderResultMessage: React.ComponentType<RenderMessageProps>;
-  RenderImageMessage: React.ComponentType<RenderMessageProps>;
+  ImageRenderer: React.ComponentType<ImageRendererProps>;
 
   /**
    * Callback function to regenerate the assistant's response
@@ -68,6 +68,7 @@ export interface Renderer {
 
 export interface UserMessageProps {
   message?: UserMessage;
+  ImageRenderer: React.ComponentType<ImageRendererProps>;
 }
 
 export interface AssistantMessageProps {
@@ -117,6 +118,11 @@ export interface AssistantMessageProps {
    * Useful when you want to render custom elements in the message (e.g a reference tag element)
    */
   markdownTagRenderers?: ComponentsMap;
+
+  /**
+   * A custom image rendering component to use instead of the default.
+   */
+  ImageRenderer?: React.ComponentType<ImageRendererProps>;
 }
 
 export interface RenderMessageProps {
@@ -127,6 +133,7 @@ export interface RenderMessageProps {
   actionResult?: string;
   AssistantMessage?: React.ComponentType<AssistantMessageProps>;
   UserMessage?: React.ComponentType<UserMessageProps>;
+  ImageRenderer?: React.ComponentType<ImageRendererProps>;
 
   /**
    * Callback function to regenerate the assistant's response
@@ -167,4 +174,21 @@ export interface InputProps {
 export interface RenderSuggestionsListProps {
   suggestions: CopilotChatSuggestion[];
   onSuggestionClick: (message: string) => void;
+}
+
+export interface ImageRendererProps {
+  /**
+   * The image data containing format and bytes
+   */
+  image: ImageData;
+
+  /**
+   * Optional content to display alongside the image
+   */
+  content?: string;
+
+  /**
+   * Additional CSS class name for styling
+   */
+  className?: string;
 }

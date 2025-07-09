@@ -105,10 +105,9 @@ function TravelPlanner() {
     visibleMessages,
     suggestions,
     setSuggestions,
-    reloadSuggestions,
+    generateSuggestions,
     appendMessage,
     interrupt,
-    isLoading,
   } = useCopilotChat({
     initialSuggestions: [
       {
@@ -228,24 +227,30 @@ function TravelPlanner() {
     minSuggestions: 3,
   });
 
-  const handleSendMessage = useCallback(() => {
-    appendMessage({
-      id: randomId(),
-      role: "user",
-      content: newMessage,
-    });
-    setNewMessage("");
-  }, [appendMessage, newMessage]);
-
-  const handleSuggestionClick = useCallback(
-    (suggestion: { title: string; message: string }) => {
-      appendMessage({
+  const sendMessage = useCallback(
+    async (message: string) => {
+      setSuggestions([]);
+      await appendMessage({
         id: randomId(),
         role: "user",
-        content: suggestion.message,
+        content: message,
+      }).then(() => {
+        generateSuggestions();
       });
     },
     [appendMessage],
+  );
+
+  const handleSendMessage = useCallback(() => {
+    sendMessage(newMessage);
+    setNewMessage("");
+  }, [sendMessage, newMessage]);
+
+  const handleSuggestionClick = useCallback(
+    (suggestion: { title: string; message: string }) => {
+      sendMessage(suggestion.message);
+    },
+    [sendMessage],
   );
 
   const handleShowDetails = useCallback((message: any) => {
@@ -284,8 +289,8 @@ function TravelPlanner() {
   }, [setSuggestions]);
 
   const reloadAISuggestions = useCallback(async () => {
-    await reloadSuggestions();
-  }, [reloadSuggestions]);
+    await generateSuggestions();
+  }, [generateSuggestions]);
 
   return (
     <>

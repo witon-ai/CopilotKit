@@ -3,9 +3,6 @@ import * as gql from "../client";
 import agui from "@copilotkit/shared";
 import {
   aguiToGQL,
-  aguiTextMessageToGQLMessage,
-  aguiToolCallToGQLActionExecution,
-  aguiToolMessageToGQLResultMessage,
 } from "./agui-to-gql";
 import { gqlToAGUI } from "./gql-to-agui";
 
@@ -161,5 +158,20 @@ describe("roundtrip message conversion", () => {
     if ("toolCalls" in aguiMsgs2[1]) {
       expect((aguiMsgs2[1] as any).toolCalls[0].function.name).toBe("doSomething");
     }
+  });
+
+  test("image message GQL -> AGUI -> GQL", () => {
+    const gqlMsg = new gql.ImageMessage({
+      id: "img-1",
+      format: "jpeg",
+      bytes: "somebase64string",
+      role: gql.Role.User,
+    });
+    const aguiMsgs = gqlToAGUI(gqlMsg);
+    const gqlMsgs2 = aguiToGQL(aguiMsgs);
+    expect(gqlMsgs2[0].id).toBe(gqlMsg.id);
+    expect((gqlMsgs2[0] as any).format).toBe(gqlMsg.format);
+    expect((gqlMsgs2[0] as any).bytes).toBe(gqlMsg.bytes);
+    expect((gqlMsgs2[0] as any).role).toBe(gqlMsg.role);
   });
 });

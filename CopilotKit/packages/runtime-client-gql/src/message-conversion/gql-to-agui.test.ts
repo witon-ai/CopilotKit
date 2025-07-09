@@ -5,6 +5,7 @@ import {
   gqlToAGUI,
   gqlTextMessageToAGUIMessage,
   gqlResultMessageToAGUIMessage,
+  gqlImageMessageToAGUIMessage,
 } from "./gql-to-agui";
 
 describe("message-conversion", () => {
@@ -757,6 +758,47 @@ describe("message-conversion", () => {
         render: expect.any(Function),
       });
       expect(result[1]).toHaveProperty("render");
+    });
+  });
+
+  describe("gqlImageMessageToAGUIMessage", () => {
+    test("should throw error for invalid image format", () => {
+      const invalidImageMsg = new gql.ImageMessage({
+        id: "img-1",
+        format: "bmp", // not in VALID_IMAGE_FORMATS
+        bytes: "somebase64string",
+        role: gql.Role.User,
+      });
+      expect(() => gqlImageMessageToAGUIMessage(invalidImageMsg)).toThrow("Invalid image format");
+    });
+
+    test("should throw error for empty image bytes", () => {
+      const invalidImageMsg = new gql.ImageMessage({
+        id: "img-2",
+        format: "jpeg",
+        bytes: "",
+        role: gql.Role.User,
+      });
+      expect(() => gqlImageMessageToAGUIMessage(invalidImageMsg)).toThrow("Image bytes must be a non-empty string");
+    });
+
+    test("should convert valid image message", () => {
+      const validImageMsg = new gql.ImageMessage({
+        id: "img-3",
+        format: "jpeg",
+        bytes: "somebase64string",
+        role: gql.Role.User,
+      });
+      const result = gqlImageMessageToAGUIMessage(validImageMsg);
+      expect(result).toMatchObject({
+        id: "img-3",
+        role: "user",
+        content: "",
+        image: {
+          format: "jpeg",
+          bytes: "somebase64string",
+        },
+      });
     });
   });
 });

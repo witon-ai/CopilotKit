@@ -54,10 +54,9 @@ import {
 import { Messages as DefaultMessages } from "./Messages";
 import { Input as DefaultInput } from "./Input";
 import { RenderTextMessage as DefaultRenderTextMessage } from "./messages/RenderTextMessage";
-import { RenderResultMessage as DefaultRenderResultMessage } from "./messages/RenderResultMessage";
-import { RenderImageMessage as DefaultRenderImageMessage } from "./messages/RenderImageMessage";
 import { AssistantMessage as DefaultAssistantMessage } from "./messages/AssistantMessage";
 import { UserMessage as DefaultUserMessage } from "./messages/UserMessage";
+import { ImageRenderer as DefaultImageRenderer } from "./messages/ImageRenderer";
 import React, { useEffect, useRef, useState } from "react";
 import {
   SystemMessageFunction,
@@ -71,6 +70,7 @@ import { randomId } from "@copilotkit/shared";
 import {
   AssistantMessageProps,
   ComponentsMap,
+  ImageRendererProps,
   InputProps,
   MessagesProps,
   RenderMessageProps,
@@ -81,7 +81,6 @@ import {
 import { HintFunction, runAgent, stopAgent } from "@copilotkit/react-core";
 import { ImageUploadQueue } from "./ImageUploadQueue";
 import { Suggestions as DefaultRenderSuggestionsList } from "./Suggestions";
-
 /**
  * Props for CopilotChat component.
  */
@@ -192,16 +191,6 @@ export interface CopilotChatProps {
   RenderTextMessage?: React.ComponentType<RenderMessageProps>;
 
   /**
-   * A custom RenderResultMessage component to use instead of the default.
-   */
-  RenderResultMessage?: React.ComponentType<RenderMessageProps>;
-
-  /**
-   * A custom RenderImageMessage component to use instead of the default.
-   */
-  RenderImageMessage?: React.ComponentType<RenderMessageProps>;
-
-  /**
    * A custom suggestions list component to use instead of the default.
    */
   RenderSuggestionsList?: React.ComponentType<RenderSuggestionsListProps>;
@@ -210,6 +199,11 @@ export interface CopilotChatProps {
    * A custom Input component to use instead of the default.
    */
   Input?: React.ComponentType<InputProps>;
+
+  /**
+   * A custom image rendering component to use instead of the default.
+   */
+  ImageRenderer?: React.ComponentType<ImageRendererProps>;
 
   /**
    * A class name to apply to the root element.
@@ -296,8 +290,6 @@ export function CopilotChat({
   markdownTagRenderers,
   Messages = DefaultMessages,
   RenderTextMessage = DefaultRenderTextMessage,
-  RenderResultMessage = DefaultRenderResultMessage,
-  RenderImageMessage = DefaultRenderImageMessage,
   RenderSuggestionsList = DefaultRenderSuggestionsList,
   Input = DefaultInput,
   className,
@@ -305,6 +297,7 @@ export function CopilotChat({
   labels,
   AssistantMessage = DefaultAssistantMessage,
   UserMessage = DefaultUserMessage,
+  ImageRenderer = DefaultImageRenderer,
   imageUploadsEnabled,
   inputFileAccept = "image/*",
   hideStopButton,
@@ -312,7 +305,6 @@ export function CopilotChat({
   const { additionalInstructions, setChatInstructions } = useCopilotContext();
   const [selectedImages, setSelectedImages] = useState<Array<ImageUpload>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [firstLoad, setFirstLoad] = useState(true);
 
   // Clipboard paste handler
   useEffect(() => {
@@ -470,8 +462,6 @@ export function CopilotChat({
         AssistantMessage={AssistantMessage}
         UserMessage={UserMessage}
         RenderTextMessage={RenderTextMessage}
-        RenderResultMessage={RenderResultMessage}
-        RenderImageMessage={RenderImageMessage}
         messages={visibleMessages}
         inProgress={isLoading}
         onRegenerate={handleRegenerate}
@@ -479,6 +469,7 @@ export function CopilotChat({
         onThumbsUp={onThumbsUp}
         onThumbsDown={onThumbsDown}
         markdownTagRenderers={markdownTagRenderers}
+        ImageRenderer={ImageRenderer}
       >
         {suggestions.length > 0 && (
           <RenderSuggestionsList onSuggestionClick={handleSendMessage} suggestions={suggestions} />
@@ -548,14 +539,14 @@ export const useCopilotChatLogic = (
     isLoading,
     suggestions,
     setSuggestions,
+    isLoadingSuggestions,
     setMessages,
-    reloadSuggestions,
+    generateSuggestions,
   } = useCopilotChat({
     id: randomId(),
     makeSystemMessage,
   });
 
-  const [initialSuggestionsLoaded, setInitialSuggestionsLoaded] = useState(false);
   const generalContext = useCopilotContext();
   const messagesContext = useCopilotMessagesContext();
   const context = { ...generalContext, ...messagesContext };
@@ -566,6 +557,12 @@ export const useCopilotChatLogic = (
   useEffect(() => {
     onInProgress?.(isLoading);
   }, [onInProgress, isLoading]);
+
+  useEffect(() => {
+    if (!isLoadingSuggestions && suggestions.length === 0 && !isLoading) {
+      generateSuggestions();
+    }
+  }, [isLoadingSuggestions, suggestions, isLoading]);
 
   const sendMessage = async (
     messageContent: string,
@@ -596,8 +593,7 @@ export const useCopilotChatLogic = (
         }
       }
 
-      await appendMessage(textMessage, { followUp: images.length === 0 });
-      await reloadSuggestions();
+      await appendMessage(textMessage, { followUp: images.length === 0, reloadSuggestions: true });
 
       if (!firstMessage) {
         firstMessage = textMessage;
@@ -605,20 +601,22 @@ export const useCopilotChatLogic = (
     }
 
     // Send image messages
-    // if (images.length > 0) {
-    //   for (let i = 0; i < images.length; i++) {
-    //     const imageMessage = new ImageMessage({
-    //       format: images[i].contentType.replace("image/", ""),
-    //       bytes: images[i].bytes,
-    //       role: Role.User,
-    //     });
-    //     // TODO
-    //     // await appendMessage(imageMessage, { followUp: i === images.length - 1 });
-    //     if (!firstMessage) {
-    //       firstMessage = imageMessage;
-    //     }
-    //   }
-    // }
+    if (images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const imageMessage = {
+          id: randomId(),
+          role: "user" as const,
+          image: {
+            format: images[i].contentType.replace("image/", ""),
+            bytes: images[i].bytes,
+          },
+        } as unknown as Message;
+        await appendMessage(imageMessage, { followUp: i === images.length - 1 });
+        if (!firstMessage) {
+          firstMessage = imageMessage;
+        }
+      }
+    }
 
     if (!firstMessage) {
       // Should not happen if send button is properly disabled, but handle just in case

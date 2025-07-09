@@ -1,10 +1,12 @@
 import { RenderMessageProps } from "../props";
 import { UserMessage as DefaultUserMessage } from "./UserMessage";
 import { AssistantMessage as DefaultAssistantMessage } from "./AssistantMessage";
+import { ImageRenderer as DefaultImageRenderer } from "./ImageRenderer";
 
 export function RenderTextMessage({
   UserMessage = DefaultUserMessage,
   AssistantMessage = DefaultAssistantMessage,
+  ImageRenderer = DefaultImageRenderer,
   ...props
 }: RenderMessageProps) {
   const {
@@ -21,7 +23,14 @@ export function RenderTextMessage({
 
   switch (message.role) {
     case "user":
-      return <UserMessage key={index} data-message-role="user" message={message} />;
+      return (
+        <UserMessage
+          key={index}
+          data-message-role="user"
+          message={message}
+          ImageRenderer={ImageRenderer}
+        />
+      );
     case "assistant":
       return (
         <AssistantMessage
@@ -36,6 +45,7 @@ export function RenderTextMessage({
           onThumbsUp={onThumbsUp}
           onThumbsDown={onThumbsDown}
           markdownTagRenderers={markdownTagRenderers}
+          ImageRenderer={ImageRenderer}
         />
       );
   }

@@ -596,7 +596,7 @@ describe("agui-to-gql", () => {
       } as any;
 
       expect(() => aguiImageMessageToGQLMessage(aguiMessage)).toThrow(
-        "Image message conversion not yet implemented",
+        "Cannot convert message to ImageMessage: missing format or bytes",
       );
     });
   });

@@ -14,6 +14,22 @@ function isAgentStateMessage(message: any): boolean {
   return message.role === "assistant" && "agentName" in message && "state" in message;
 }
 
+// Type guard for image message
+function isImageMessage(message: any): boolean {
+  return "format" in message && "bytes" in message;
+}
+
+// Type guard for messages with image property
+function hasImageProperty(message: any): boolean {
+  return (
+    message &&
+    "image" in message &&
+    message.image &&
+    "format" in message.image &&
+    "bytes" in message.image
+  );
+}
+
 /*
   ----------------------------
   AGUI Message -> GQL Message
@@ -50,6 +66,16 @@ export function aguiToGQL(
           render: message.render,
         };
       }
+      continue;
+    }
+    // Image message support (legacy format)
+    if (isImageMessage(message)) {
+      gqlMessages.push(aguiImageMessageToGQLMessage(message));
+      continue;
+    }
+    // Messages with image property (new format)
+    if (hasImageProperty(message)) {
+      gqlMessages.push(aguiMessageWithImageToGQLMessage(message));
       continue;
     }
     // Action execution message support
@@ -204,7 +230,42 @@ export function aguiMessageWithRenderToGQL(
 
 // New function to handle image messages (placeholder for future implementation)
 export function aguiImageMessageToGQLMessage(message: agui.Message): gql.ImageMessage {
-  // This is a placeholder for future implementation
-  // The actual implementation would depend on the AGUI image message structure
-  throw new Error("Image message conversion not yet implemented");
+  if (!isImageMessage(message)) {
+    throw new Error(`Cannot convert message to ImageMessage: missing format or bytes`);
+  }
+
+  let roleValue: MessageRole;
+  if (message.role === "assistant") {
+    roleValue = gql.Role.Assistant;
+  } else {
+    roleValue = gql.Role.User;
+  }
+
+  return new gql.ImageMessage({
+    id: message.id,
+    format: (message as any).format,
+    bytes: (message as any).bytes,
+    role: roleValue,
+  });
+}
+
+// New function to handle messages with image property
+export function aguiMessageWithImageToGQLMessage(message: agui.Message): gql.ImageMessage {
+  if (!hasImageProperty(message)) {
+    throw new Error(`Cannot convert message to ImageMessage: missing image property`);
+  }
+
+  let roleValue: MessageRole;
+  if (message.role === "assistant") {
+    roleValue = gql.Role.Assistant;
+  } else {
+    roleValue = gql.Role.User;
+  }
+
+  return new gql.ImageMessage({
+    id: message.id,
+    format: (message as any).image.format,
+    bytes: (message as any).image.bytes,
+    role: roleValue,
+  });
 }

@@ -11,6 +11,7 @@ export const Messages = ({
   RenderTextMessage,
   AssistantMessage,
   UserMessage,
+  ImageRenderer,
   onRegenerate,
   onCopy,
   onThumbsUp,
@@ -30,6 +31,8 @@ export const Messages = ({
         {messages.map((message, index) => {
           const isCurrentMessage = index === messages.length - 1;
 
+          // Handle all message types through the RenderTextMessage component
+          // Image messages will be handled by the UserMessage and AssistantMessage components
           return (
             <RenderTextMessage
               key={index}
@@ -39,6 +42,7 @@ export const Messages = ({
               isCurrentMessage={isCurrentMessage}
               AssistantMessage={AssistantMessage}
               UserMessage={UserMessage}
+              ImageRenderer={ImageRenderer}
               onRegenerate={onRegenerate}
               onCopy={onCopy}
               onThumbsUp={onThumbsUp}
@@ -46,29 +50,31 @@ export const Messages = ({
               markdownTagRenderers={markdownTagRenderers}
             />
           );
+          {interrupt}
         })}
-        {interrupt}
       </StickToBottom.Content>
-      <footer className="copilotKitMessagesFooter">{children}</footer>
+      {children}
     </StickToBottom>
   );
 };
 
-function makeInitialMessages(initial?: string | string[]): Message[] {
-  let initialArray: string[] = [];
-  if (initial) {
-    if (Array.isArray(initial)) {
-      initialArray.push(...initial);
-    } else {
-      initialArray.push(initial);
-    }
+function makeInitialMessages(initial: string | string[] | undefined): Message[] {
+  if (!initial) return [];
+
+  if (Array.isArray(initial)) {
+    return initial.map(
+      (message) =>
+        new TextMessage({
+          role: Role.Assistant,
+          content: message,
+        }),
+    );
   }
 
-  return initialArray.map(
-    (message) =>
-      new TextMessage({
-        role: Role.Assistant,
-        content: message,
-      }),
-  );
+  return [
+    new TextMessage({
+      content: initial,
+      role: Role.System,
+    }),
+  ];
 }
