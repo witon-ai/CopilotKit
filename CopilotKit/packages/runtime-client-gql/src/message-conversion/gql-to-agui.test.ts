@@ -779,7 +779,9 @@ describe("message-conversion", () => {
         bytes: "",
         role: gql.Role.User,
       });
-      expect(() => gqlImageMessageToAGUIMessage(invalidImageMsg)).toThrow("Image bytes must be a non-empty string");
+      expect(() => gqlImageMessageToAGUIMessage(invalidImageMsg)).toThrow(
+        "Image bytes must be a non-empty string",
+      );
     });
 
     test("should convert valid image message", () => {

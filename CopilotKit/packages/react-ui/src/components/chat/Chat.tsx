@@ -57,7 +57,7 @@ import { RenderTextMessage as DefaultRenderTextMessage } from "./messages/Render
 import { AssistantMessage as DefaultAssistantMessage } from "./messages/AssistantMessage";
 import { UserMessage as DefaultUserMessage } from "./messages/UserMessage";
 import { ImageRenderer as DefaultImageRenderer } from "./messages/ImageRenderer";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   SystemMessageFunction,
   useCopilotChat,
@@ -81,6 +81,7 @@ import {
 import { HintFunction, runAgent, stopAgent } from "@copilotkit/react-core";
 import { ImageUploadQueue } from "./ImageUploadQueue";
 import { Suggestions as DefaultRenderSuggestionsList } from "./Suggestions";
+import { SUGGESTION_RETRY_CONFIG } from "@copilotkit/react-core";
 /**
  * Props for CopilotChat component.
  */
@@ -542,6 +543,7 @@ export const useCopilotChatLogic = (
     isLoadingSuggestions,
     setMessages,
     generateSuggestions,
+    resetSuggestions: resetSuggestionsFromHook,
   } = useCopilotChat({
     id: randomId(),
     makeSystemMessage,
@@ -554,15 +556,81 @@ export const useCopilotChatLogic = (
   // Get actions from context for message conversion
   const { actions } = generalContext;
 
+  // Add state to track suggestion retry attempts and prevent infinite loops
+  const [lastSuggestionAttempt, setLastSuggestionAttempt] = useState<number>(0);
+  const [suggestionsFailed, setSuggestionsFailed] = useState(false);
+  const suggestionRetryCountRef = useRef<number>(0);
+
+  // Constants for retry logic
+  const MAX_SUGGESTION_RETRIES = SUGGESTION_RETRY_CONFIG.MAX_RETRIES;
+  const SUGGESTION_RETRY_COOLDOWN_MS = SUGGESTION_RETRY_CONFIG.COOLDOWN_MS;
+
+  // Wrapper for resetSuggestions that also resets local state
+  const resetSuggestions = useCallback(() => {
+    resetSuggestionsFromHook();
+    setSuggestionsFailed(false);
+    suggestionRetryCountRef.current = 0;
+  }, [resetSuggestionsFromHook]);
+
   useEffect(() => {
     onInProgress?.(isLoading);
   }, [onInProgress, isLoading]);
 
   useEffect(() => {
-    if (!isLoadingSuggestions && suggestions.length === 0 && !isLoading) {
-      generateSuggestions();
+    // Reset failed state when messages change (new conversation context)
+    if (visibleMessages.length > 0) {
+      setSuggestionsFailed(false);
+      suggestionRetryCountRef.current = 0;
     }
-  }, [isLoadingSuggestions, suggestions, isLoading]);
+  }, [visibleMessages.length]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastSuggestionAttempt;
+    const isFirstAttempt = suggestionRetryCountRef.current === 0;
+    const hasWaitedEnough = isFirstAttempt || timeSinceLastAttempt > SUGGESTION_RETRY_COOLDOWN_MS;
+
+    const shouldAttemptSuggestions =
+      !isLoadingSuggestions &&
+      suggestions.length === 0 &&
+      !isLoading &&
+      !suggestionsFailed &&
+      suggestionRetryCountRef.current < MAX_SUGGESTION_RETRIES &&
+      hasWaitedEnough;
+
+    if (shouldAttemptSuggestions) {
+      const attemptGenerateSuggestions = async () => {
+        try {
+          setLastSuggestionAttempt(now);
+          suggestionRetryCountRef.current += 1;
+
+          await generateSuggestions();
+          // Reset retry count on success
+          suggestionRetryCountRef.current = 0;
+          setSuggestionsFailed(false);
+        } catch (error) {
+          console.error("Failed to generate suggestions:", error);
+
+          // If we've exceeded retry limit, mark as failed
+          if (suggestionRetryCountRef.current >= MAX_SUGGESTION_RETRIES) {
+            setSuggestionsFailed(true);
+            console.warn(
+              "Suggestions generation failed after maximum retries. Suggestions will be disabled until messages change.",
+            );
+          }
+        }
+      };
+
+      attemptGenerateSuggestions();
+    }
+  }, [
+    isLoadingSuggestions,
+    suggestions,
+    isLoading,
+    lastSuggestionAttempt,
+    suggestionsFailed,
+    generateSuggestions,
+  ]);
 
   const sendMessage = async (
     messageContent: string,
@@ -680,6 +748,9 @@ export const useCopilotChatLogic = (
   };
 
   function stopGeneration() {
+    // Clear suggestions when stopping generation
+    setSuggestions([]);
+
     if (onStopGeneration) {
       onStopGeneration({
         messages: messages,
@@ -721,6 +792,7 @@ export const useCopilotChatLogic = (
     sendMessage,
     stopGeneration,
     reloadMessages,
+    resetSuggestions,
     context,
     actions,
   };

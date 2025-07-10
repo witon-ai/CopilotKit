@@ -10,7 +10,7 @@ type AgentStateMessage = agui.AIMessage & {
 
 // Define valid image formats based on the supported formats in the codebase
 const VALID_IMAGE_FORMATS = ["jpeg", "png", "webp", "gif"] as const;
-type ValidImageFormat = typeof VALID_IMAGE_FORMATS[number];
+type ValidImageFormat = (typeof VALID_IMAGE_FORMATS)[number];
 
 // Validation function for image format
 function validateImageFormat(format: string): format is ValidImageFormat {
@@ -214,7 +214,9 @@ export function gqlResultMessageToAGUIMessage(message: gql.ResultMessage): agui.
 export function gqlImageMessageToAGUIMessage(message: gql.ImageMessage): agui.Message {
   // Validate image format
   if (!validateImageFormat(message.format)) {
-    throw new Error(`Invalid image format: ${message.format}. Supported formats are: ${VALID_IMAGE_FORMATS.join(", ")}`);
+    throw new Error(
+      `Invalid image format: ${message.format}. Supported formats are: ${VALID_IMAGE_FORMATS.join(", ")}`,
+    );
   }
 
   // Validate that bytes is a non-empty string

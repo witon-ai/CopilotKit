@@ -1,9 +1,7 @@
 import { describe, test, expect, vi } from "vitest";
 import * as gql from "../client";
 import agui from "@copilotkit/shared";
-import {
-  aguiToGQL,
-} from "./agui-to-gql";
+import { aguiToGQL } from "./agui-to-gql";
 import { gqlToAGUI } from "./gql-to-agui";
 
 // Helper to strip functions for deep equality

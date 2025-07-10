@@ -17,9 +17,7 @@ export const ImageRenderer: React.FC<ImageRendererProps> = ({ image, content, cl
   if (imageError) {
     return (
       <div className={`copilotKitImageRendering copilotKitImageRenderingError ${className}`}>
-        <div className="copilotKitImageRenderingErrorMessage">
-          Failed to load image
-        </div>
+        <div className="copilotKitImageRenderingErrorMessage">Failed to load image</div>
         {content && <div className="copilotKitImageRenderingContent">{content}</div>}
       </div>
     );
@@ -27,9 +25,9 @@ export const ImageRenderer: React.FC<ImageRendererProps> = ({ image, content, cl
 
   return (
     <div className={`copilotKitImageRendering ${className}`}>
-      <img 
-        src={imageSrc} 
-        alt={altText} 
+      <img
+        src={imageSrc}
+        alt={altText}
         className="copilotKitImageRenderingImage"
         onError={handleImageError}
       />

@@ -1,3 +1,16 @@
+/**
+ * Suggestions utility functions for CopilotKit
+ *
+ * This module handles the generation of chat suggestions with improved error handling
+ * to prevent infinite retry loops when suggestions fail to load.
+ *
+ * Key improvements:
+ * - Network errors are caught and logged without throwing to prevent infinite retries
+ * - Abort errors are handled gracefully when user cancels suggestions
+ * - Partial success is supported - if some suggestion configs succeed, those suggestions are shown
+ * - Better error categorization to distinguish between retryable and non-retryable errors
+ */
+
 import { extract } from "./extract";
 import { actionParametersToJsonSchema } from "@copilotkit/shared";
 import { CopilotRequestType } from "@copilotkit/runtime-client-gql";
@@ -19,7 +32,19 @@ export const reloadSuggestions = async (
 ): Promise<void> => {
   const abortController = abortControllerRef.current;
 
-  setCurrentSuggestions([]);
+  // Early abort check
+  if (abortController?.signal.aborted) {
+    return;
+  }
+
+  // Abort-aware suggestion setter
+  const setSuggestionsIfNotAborted = (suggestions: SuggestionItem[]) => {
+    if (!abortController?.signal.aborted) {
+      setCurrentSuggestions(suggestions);
+    }
+  };
+
+  setSuggestionsIfNotAborted([]);
 
   // Validate inputs
   if (!context) {
@@ -45,6 +70,7 @@ export const reloadSuggestions = async (
   );
 
   const allSuggestions: SuggestionItem[] = [];
+  let hasSuccessfulSuggestions = false;
 
   for (const config of Object.values(chatSuggestionConfiguration)) {
     if (!config) continue;
@@ -114,17 +140,45 @@ export const reloadSuggestions = async (
               className: config.className,
             });
           }
-          setCurrentSuggestions([...allSuggestions, ...newSuggestions]);
+          setSuggestionsIfNotAborted([...allSuggestions, ...newSuggestions]);
         },
       });
 
       if (result && result.suggestions) {
         allSuggestions.push(...result.suggestions);
+        hasSuccessfulSuggestions = true;
       }
     } catch (error) {
+      // Check if this is an abort error (user cancelled)
+      if (error instanceof Error && error.name === "AbortError") {
+        console.log("Suggestions generation was aborted by user");
+        setSuggestionsIfNotAborted([]);
+        return;
+      }
+
+      // Check if this is a network/connection error that should not be retried
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isNetworkError =
+        errorMessage.toLowerCase().includes("network") ||
+        errorMessage.toLowerCase().includes("fetch") ||
+        errorMessage.toLowerCase().includes("connection") ||
+        errorMessage.toLowerCase().includes("timeout");
+
+      if (isNetworkError) {
+        console.error("Network error loading suggestions for config:", config, "Error:", error);
+        // Don't throw for network errors to prevent infinite retries
+        continue;
+      }
+
+      // For other errors, log but continue with other configurations
       console.error("Error loading suggestions for config:", config, "Error:", error);
-      // Continue with other configurations even if one fails
+      continue;
     }
+  }
+
+  // If we have any successful suggestions, update the UI
+  if (hasSuccessfulSuggestions && allSuggestions.length > 0) {
+    setSuggestionsIfNotAborted(allSuggestions);
   }
 
   if (abortControllerRef.current === abortController) {

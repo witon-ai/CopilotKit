@@ -50,7 +50,9 @@ export const Messages = ({
               markdownTagRenderers={markdownTagRenderers}
             />
           );
-          {interrupt}
+          {
+            interrupt;
+          }
         })}
       </StickToBottom.Content>
       {children}

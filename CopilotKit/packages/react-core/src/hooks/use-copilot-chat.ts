@@ -105,6 +105,7 @@ export interface UseCopilotChatReturn {
   suggestions: SuggestionItem[];
   setSuggestions: (suggestions: SuggestionItem[]) => void;
   generateSuggestions: () => Promise<void>;
+  resetSuggestions: () => void;
   isLoadingSuggestions: boolean;
   interrupt: string | React.ReactElement | null;
 }
@@ -149,11 +150,20 @@ export function useCopilotChat({
   // Add suggestion state - same as useCopilotChatLogic
   const suggestionsAbortControllerRef = useRef<AbortController | null>(null);
   const isLoadingSuggestionsRef = useRef<boolean>(false);
+  const suggestionsFailedRef = useRef<boolean>(false);
 
   const abortSuggestions = () => {
-    suggestionsAbortControllerRef.current?.abort("suggestioned aborted by user");
+    suggestionsAbortControllerRef.current?.abort("suggestions aborted by user");
     suggestionsAbortControllerRef.current = null;
+    setSuggestions([]);
   };
+
+  // Reset suggestions failed state when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      suggestionsFailedRef.current = false;
+    }
+  }, [messages.length]);
 
   // Create combined context for suggestions - memoize to prevent infinite loops
   const generalContext = useCopilotContext();
@@ -198,18 +208,32 @@ export function useCopilotChat({
 
   // Use the shared generateSuggestions function
   const generateSuggestionsFunc = useAsyncCallback(async () => {
+    // Don't attempt if suggestions have failed
+    if (suggestionsFailedRef.current) {
+      console.log("Skipping suggestions generation - previous attempts failed");
+      return;
+    }
+
     try {
       abortSuggestions();
       isLoadingSuggestionsRef.current = true;
       suggestionsAbortControllerRef.current = new AbortController();
+
+      // Clear any existing suggestions before starting new generation
+      setSuggestions([]);
+
       await generateSuggestions(
         context as CopilotContextParams & CopilotMessagesContextParams,
         chatSuggestionConfiguration,
         setSuggestions,
         suggestionsAbortControllerRef,
       );
+      // Reset failed state on success
+      suggestionsFailedRef.current = false;
     } catch (error) {
       console.error("Error in generateSuggestions:", error);
+      // Mark as failed to prevent infinite retries
+      suggestionsFailedRef.current = true;
       // Don't rethrow to prevent infinite retries
     } finally {
       isLoadingSuggestionsRef.current = false;
@@ -348,6 +372,11 @@ export function useCopilotChat({
     return await latestRunChatCompletion.current!();
   }, [latestRunChatCompletion]);
 
+  const resetSuggestions = useCallback(() => {
+    suggestionsFailedRef.current = false;
+    setSuggestions([]);
+  }, [setSuggestions]);
+
   const reset = useCallback(() => {
     latestStopFunc();
     setMessages([]);
@@ -360,6 +389,8 @@ export function useCopilotChat({
       };
     }
     setAgentSession(initialAgentSession);
+    // Reset suggestions when chat is reset
+    resetSuggestions();
   }, [
     latestStopFunc,
     setMessages,
@@ -367,6 +398,7 @@ export function useCopilotChat({
     setCoagentStatesWithRef,
     setAgentSession,
     agentLock,
+    resetSuggestions,
   ]);
 
   const latestReset = useUpdatedRef(reset);
@@ -391,8 +423,9 @@ export function useCopilotChat({
     suggestions,
     setSuggestions,
     generateSuggestions: generateSuggestionsFunc,
-    interrupt,
+    resetSuggestions,
     isLoadingSuggestions: isLoadingSuggestionsRef.current,
+    interrupt,
   };
 }
 

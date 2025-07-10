@@ -1,7 +1,7 @@
 import { AIMessage, Message, UserMessage } from "@copilotkit/shared";
 import { CopilotChatSuggestion } from "../../types/suggestions";
 import { ReactNode } from "react";
-import { ImageData } from "@copilotkit/shared"; 
+import { ImageData } from "@copilotkit/shared";
 
 export interface ButtonProps {}
 
